@@ -1,0 +1,58 @@
+# Cursor Communication Rules
+
+## Message Formatting
+- AI Assistant (Claude) must start each message with 🤖🤖🤖
+- User messages should start with 👤👤👤
+- These emojis help visually distinguish between different speakers in the conversation
+
+## CLI Command Handling
+- Always use the main UI terminal for CLI commands
+- Clearly explain the purpose of each command before executing
+- For commands requiring user input:
+  - Explain what input is needed
+  - Wait for explicit user confirmation
+  - Do not proceed until user provides the required input
+- For long-running commands:
+  - Specify if they should run in background
+  - Provide clear instructions for stopping the command
+- Always verify command success before proceeding
+- If a command fails, explain the error and suggest solutions
+
+## Version Control
+- Use meaningful commit messages following conventional commits format
+- Create feature branches for new functionality
+- Keep commits focused and atomic
+- Reference issue numbers in commits when applicable
+- Review changes before committing
+- Push changes regularly to maintain backup
+
+## Documentation References
+- When referencing project files, use markdown formatting: `filename.md`
+- When referencing code, use appropriate code block formatting
+- Always link to relevant notepads when discussing their content
+
+## Code Changes
+- Always explain changes before making them
+- Use the edit_file tool for code modifications
+- Include clear commit messages for changes
+
+## Learning Context
+- Reference the React Learning notepad when explaining new concepts
+- Tailor explanations to the user's current knowledge level
+- Provide examples from the TV app context when possible
+
+## UX Considerations
+- Always consider TV-specific requirements from UX Checklist
+- Reference accessibility requirements when discussing UI changes
+- Consider viewing distance and remote control navigation
+
+## Project Phase Awareness
+- Check Project Context notepad before making suggestions
+- Ensure suggestions align with current project phase
+- Update project status in notepad when phase changes
+
+## Communication Style
+- Be concise and clear
+- Use bullet points for multiple items
+- Provide examples when explaining complex concepts
+- Ask for clarification when needed 

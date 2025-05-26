@@ -1,0 +1,1 @@
+export const TRANS_BTN_ICON_SIZE = 44; // px 

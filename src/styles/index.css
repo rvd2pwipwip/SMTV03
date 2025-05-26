@@ -1,0 +1,64 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-family-primary);
+  background: var(--color-background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* TV-specific optimizations */
+
+/* TV-specific: fixed viewport */
+body {
+  width: var(--tv-width);
+  height: var(--tv-height);
+}
+
+/* TV-specific optimizations for font sizing */
+@media (min-width: var(--tv-width)) and (min-height: var(--tv-height)) {
+  html {
+    font-size: var(--tv-base-font-size); /* Base font size for 1920x1080 */
+  }
+}
+
+/* Ensure text remains readable on smaller screens */
+@media (max-width: var(--tv-width)), (max-height: var(--tv-height)) {
+  html {
+    font-size: calc(var(--tv-base-font-size) * min(calc(100vw / var(--tv-width)), calc(100vh / var(--tv-height))));
+  }
+}
+
+body {
+  color: var(--color-text-primary);
+  /* TV-specific: fixed viewport */
+  width: 1920px;
+  height: 1080px;
+}
+
+/* TV-specific: ensure all interactive elements are focusable */
+:focus {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* TV-specific: larger text for viewing distance */
+body {
+  font-size: var(--font-size-body);
+  line-height: 1.5;
+}
+
+/* Remove any .app, .app-header, or app-specific rules from here */ 
