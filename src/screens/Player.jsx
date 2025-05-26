@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import '../styles/App.css';
 import { Info, Like, SkipNext, PauseCircle } from 'stingray-icons';
 import stingrayMusicLogo from '../assets/svg/stingrayMusic.svg';
@@ -9,31 +9,16 @@ import { TRANS_BTN_ICON_SIZE } from '../constants/ui';
 import AdBanner from '../components/AdBanner';
 
 function Player({ channel, onBack }) {
-  // Focusable action buttons for header
+  // Use plain refs for focusable elements
   const infoRef = React.useRef(null);
   const likeRef = React.useRef(null);
-  // Controls row (PauseCircle, etc.)
   const controlsGroupRef = React.useRef(null);
   const skipRef = React.useRef(null);
   const pauseRef = React.useRef(null);
 
-  const styles = {
-    container: {
-      width: '100%',
-      height: '100%',
-      position: 'relative',
-      backgroundColor: 'var(--color-surface)',
-      paddingTop: 'var(--screen-side-padding)',
-    },
-    backButton: {
-      position: 'absolute',
-      left: 'var(--screen-side-padding)',
-      top: 'var(--screen-side-padding)',
-      zIndex: 1,
-    },
-    channelInfo: {
-      padding: '0px var(--screen-side-padding)',
-    },
+  // Example click handler
+  const handlePlayPause = () => {
+    // Add play/pause logic here
   };
 
   return (
@@ -90,7 +75,7 @@ function Player({ channel, onBack }) {
             onSelect={() => {}}
           >
             <Button
-              icon={<Info size={TRANS_BTN_ICON_SIZE}/>}
+              icon={<Info size={TRANS_BTN_ICON_SIZE}/>} 
               showIcon
               size="medium"
               variant="transparent"
@@ -103,7 +88,7 @@ function Player({ channel, onBack }) {
             onSelect={() => {}}
           >
             <Button
-              icon={<Like size={TRANS_BTN_ICON_SIZE}/>}
+              icon={<Like size={TRANS_BTN_ICON_SIZE}/>} 
               showIcon
               size="medium"
               variant="transparent"
@@ -219,8 +204,6 @@ function Player({ channel, onBack }) {
             </KeyboardWrapper>
           </div>
         </div>
-
-        {/* Logo Placeholder (moved out of main content) */}
       </div>
       <AdBanner />
     </>

@@ -7,38 +7,26 @@ import { Like, SingNow } from 'stingray-icons';
 import AdBanner from '../components/AdBanner';
 
 function ChannelInfo({ channel, onBack, onPlay }) {
-  // Action button group focus context (not itself focusable, tracks children)
+  // Use plain refs for focusable elements
   const actionGroupRef = useRef(null);
-
-  // Play button focusable
   const playRef = useRef(null);
-
-  // Add to Favorites button focusable
   const favRef = useRef(null);
-
-  // Filter button group focus context (not itself focusable, tracks children)
   const filterGroupRef = useRef(null);
-
-  // Individual filter buttons
   const allRef = useRef(null);
   const popularRef = useRef(null);
   const recommendedRef = useRef(null);
   const newRef = useRef(null);
   const favoritesRef = useRef(null);
-
-  // Related channel cards group focus context (not itself focusable, tracks children)
   const relatedGroupRef = useRef(null);
-
-  // Individual related channel cards
   const relatedCard1Ref = useRef(null);
   const relatedCard2Ref = useRef(null);
   const relatedCard3Ref = useRef(null);
   const relatedCard4Ref = useRef(null);
   const relatedCard5Ref = useRef(null);
 
-  // Set initial focus to Play button on mount
+  // Set initial focus to Play button on mount (optional, for keyboard users)
   useEffect(() => {
-    if (playRef) {
+    if (playRef && playRef.current) {
       setTimeout(() => {
         playRef.current.focus();
       }, 0);
