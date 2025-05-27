@@ -115,7 +115,7 @@ function Home({ onChannelSelect }) {
             Test Primary Button
           </Button>
         </div>
-        <SlidingSwimlane ref={slidingSwimlaneRef} restoring={false}>
+        <SlidingSwimlane focusedIndex={focusedCard} numCards={cardRefs.length}>
           <Swimlane ref={swimlaneRef}>
             {cardRefs.map((ref, i) => (
               <ChannelCard
@@ -125,7 +125,6 @@ function Home({ onChannelSelect }) {
                 title={`Sample Channel ${i + 1}`}
                 thumbnailUrl={`https://picsum.photos/300/300?${i + 1}`}
                 onClick={() => handleCardClick({ id: i + 1, title: `Sample Channel ${i + 1}` })}
-                // Step 2: Pass the focused Prop to Each Channel Card
                 focused={focusedCard === i}
               />
             ))}

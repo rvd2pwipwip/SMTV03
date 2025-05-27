@@ -1,95 +1,57 @@
-import React, { useEffect, useState, useRef, useImperativeHandle } from 'react';
+import React, { useMemo } from 'react';
 import '../styles/App.css';
 
-const SlidingSwimlane = React.forwardRef(({ children, restoring = false, ...props }, ref) => {
-  const [offset, setOffset] = useState(0);
-  const swimlaneRef = useRef(null);
-
-  // Expose imperative handle for parent to get/set offset
-  useImperativeHandle(ref, () => ({
-    // Returns the current offset value
-    getOffset: () => offset,
-    // Allows parent to set the offset directly
-    setOffset: (value) => setOffset(value)
-  }), [offset]);
-
-  // Calculate offset when focus changes
-  useEffect(() => {
-    // Skip observer logic during restoration phase
-    if (restoring) return;
-    if (!swimlaneRef.current) return;
-
-    const updateOffset = () => {
-      const focusedElement = document.querySelector('[data-focused="true"]');
-      if (!focusedElement) return;
-
-      // Only update offset if the focused element is inside the swimlane
-      if (!swimlaneRef.current.contains(focusedElement)) return;
-
-      const viewportRect = swimlaneRef.current.getBoundingClientRect();
-      const focusedRect = focusedElement.getBoundingClientRect();
-      const firstCard = swimlaneRef.current.querySelector('[data-stable-id="home-card-1"]');
-      
-      if (!firstCard) return;
-
-      const firstCardRect = firstCard.getBoundingClientRect();
-      const newOffset = firstCardRect.left - focusedRect.left;
-
-      // Get the total width of the content
-      const contentRect = swimlaneRef.current.getBoundingClientRect();
-      const contentWidth = contentRect.width;
-      const viewportWidth = viewportRect.width;
-      
-      // Get the CSS variable value using getComputedStyle
-      const screenSidePadding = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--screen-side-padding'));
-
-      // Calculate how much the content can slide before reaching the margin
-      const maxSlide = contentWidth - viewportWidth + screenSidePadding + screenSidePadding;
-
-      // If the new offset would slide the content beyond the max slide, use the max slide instead
-      if (Math.abs(newOffset) > maxSlide) {
-        setOffset(-maxSlide);
-        return;
-      }
-
-      setOffset(newOffset);
-    };
-
-    // Set up MutationObserver to watch for focus changes
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'data-focused') {
-          updateOffset();
-        }
-      });
-    });
-
-    // Start observing all cards in the swimlane
-    const cards = swimlaneRef.current.querySelectorAll('[data-stable-id^="home-card-"]');
-    cards.forEach(card => {
-      observer.observe(card, { attributes: true });
-    });
-
-    // Initial update
-    updateOffset();
-
-    // Cleanup
-    return () => {
-      observer.disconnect();
-    };
-  }, [restoring]);
+/**
+ * SlidingSwimlane - horizontally scrolls its children based on the focused card index.
+ *
+ * Props:
+ * - children: ChannelCard components
+ * - focusedIndex: index of the currently focused card
+ * - cardWidth: width of a card (px)
+ * - cardGap: gap between cards (px)
+ * - numCards: total number of cards
+ * - viewportWidth: width of the visible swimlane area (px)
+ * - sidePadding: padding on each side (px)
+ */
+const SlidingSwimlane = React.forwardRef(({
+  children,
+  focusedIndex = 0,
+  cardWidth = 300,
+  cardGap = 24,
+  numCards = 12,
+  viewportWidth = 1792, // 1920 - 2*64
+  sidePadding = 64,
+  ...props
+}, ref) => {
+  // Calculate the offset for the swimlane content
+  const offset = useMemo(() => {
+    // The full width of a card including the gap
+    const cardFullWidth = cardWidth + cardGap;
+    // The total width of all cards
+    const totalContentWidth = numCards * cardFullWidth;
+    // The maximum offset so the last card "parks" at the right edge
+    const maxOffset = Math.max(0, totalContentWidth - viewportWidth + sidePadding);
+    // Desired offset: keep focused card at left after padding
+    let calcOffset = focusedIndex * cardFullWidth - sidePadding;
+    // Clamp so we never scroll before the first card
+    calcOffset = Math.max(0, calcOffset);
+    // Clamp so we never scroll past the last card
+    calcOffset = Math.min(calcOffset, maxOffset);
+    return calcOffset;
+  }, [focusedIndex, cardWidth, cardGap, numCards, viewportWidth, sidePadding]);
 
   return (
     <div 
       className="swimlane-viewport"
-      style={{ width: '100%' }}
+      style={{ width: '100%', overflow: 'hidden', paddingLeft: 'var(--screen-side-padding)' }}
     >
       <div 
         className="content-swimlane"
-        ref={swimlaneRef}
-        style={{ 
-          transform: `translateX(${offset}px)`,
-          transition: restoring ? 'none' : undefined // Disable transition if restoring
+        style={{
+          display: 'flex',
+          gap: `${cardGap}px`,
+          transform: `translateX(-${offset}px)`,
+          transition: 'transform 0.3s cubic-bezier(0.4,0,0.2,1)',
         }}
       >
         {children}
