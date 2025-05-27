@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@smtv/design-tokens": "^1.0.3",
-    "@smtv/tv-component-library": "^2.1.4",
+    "@smtv/tv-component-library": "^2.1.6",
     "stingray-icons": "^1.0.4"
   }
 }

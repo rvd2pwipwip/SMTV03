@@ -1,3 +1,5 @@
+@import '@smtv/tv-component-library/dist/style.css';
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -49,10 +51,8 @@ body {
   height: 1080px;
 }
 
-/* TV-specific: ensure all interactive elements are focusable */
 :focus {
-  outline: 2px solid var(--color-focus-ring);
-  outline-offset: 2px;
+  outline: none;
 }
 
 /* TV-specific: larger text for viewing distance */
@@ -61,4 +61,8 @@ body {
   line-height: 1.5;
 }
 
-/* Remove any .app, .app-header, or app-specific rules from here */ 
+/* .tv-focus-ring {
+  outline: 4px solid #00baff !important;
+  outline-offset: 2px !important;
+  transform: scale(1.08) !important;
+} */

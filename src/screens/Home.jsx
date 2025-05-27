@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import KeyboardWrapper from '../components/KeyboardWrapper';
 import { ChannelCard, Button } from '@smtv/tv-component-library';
 import '@smtv/tv-component-library/dist/style.css';
@@ -19,6 +19,30 @@ function Home({ onChannelSelect }) {
   const testButtonRef = useRef(null);
   const slidingSwimlaneRef = useRef(null);
   const swimlaneRef = useRef(null);
+
+  // Step 1: Focus state for swimlane cards
+  const [focusedCard, setFocusedCard] = useState(0);
+
+  // Step 3: Keyboard navigation for swimlane
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowRight') {
+        setFocusedCard((prev) => Math.min(prev + 1, cardRefs.length - 1));
+      } else if (e.key === 'ArrowLeft') {
+        setFocusedCard((prev) => Math.max(prev - 1, 0));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [cardRefs.length]);
+
+  // Step 4: Focus the DOM node of the focused card
+  useEffect(() => {
+    const ref = cardRefs[focusedCard];
+    if (ref && ref.current) {
+      ref.current.focus();
+    }
+  }, [focusedCard, cardRefs]);
 
   // Example click handler
   const handleCardClick = (channelData) => {
@@ -101,6 +125,8 @@ function Home({ onChannelSelect }) {
                 title={`Sample Channel ${i + 1}`}
                 thumbnailUrl={`https://picsum.photos/300/300?${i + 1}`}
                 onClick={() => handleCardClick({ id: i + 1, title: `Sample Channel ${i + 1}` })}
+                // Step 2: Pass the focused Prop to Each Channel Card
+                focused={focusedCard === i}
               />
             ))}
           </Swimlane>
