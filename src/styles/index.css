@@ -51,9 +51,9 @@ body {
   height: 1080px;
 }
 
-:focus {
+/* :focus {
   outline: none;
-}
+} */
 
 /* TV-specific: larger text for viewing distance */
 body {
