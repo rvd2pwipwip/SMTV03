@@ -51,3 +51,27 @@ This document outlines the CSS architecture for our TV application, following Re
 - Consider migrating to CSS Modules for better scoping
 - Evaluate CSS-in-JS solutions for complex components
 - Implement a component library with consistent styling 
+
+## Importing Component Library CSS
+
+To ensure all utility classes and shared styles (such as `.tv-focus-ring`) from `@smtv/tv-component-library` are available throughout the app, **import the library's CSS in your global `index.css`**:
+
+```css
+@import '@smtv/tv-component-library/dist/style.css';
+```
+
+- This guarantees all library styles are loaded globally and in the correct order.
+- **Do not rely on importing the CSS in JS/TS files (like `main.jsx`)**—some build setups may not process these imports as global styles.
+- All components from the library will have their intended styles, including the universal focus ring, without any additional configuration.
+
+### Example: `src/styles/index.css`
+
+```css
+@import '@smtv/tv-component-library/dist/style.css';
+@import '@smtv/design-tokens/dist/design-tokens.css';
+
+/* ...other global styles... */
+```
+
+**Result:**
+All TV component library styles (including focus rings and utility classes) are available globally, ensuring consistent design and behavior across your app. 
