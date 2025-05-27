@@ -27,16 +27,14 @@ const SlidingSwimlane = React.forwardRef(({
   const offset = useMemo(() => {
     // The full width of a card including the gap
     const cardFullWidth = cardWidth + cardGap;
+    // The left position of the focused card (no need to subtract sidePadding)
+    const left = focusedIndex * cardFullWidth;
     // The total width of all cards
     const totalContentWidth = numCards * cardFullWidth;
     // The maximum offset so the last card "parks" at the right edge
     const maxOffset = Math.max(0, totalContentWidth - viewportWidth + sidePadding);
-    // Desired offset: keep focused card at left after padding
-    let calcOffset = focusedIndex * cardFullWidth - sidePadding;
-    // Clamp so we never scroll before the first card
-    calcOffset = Math.max(0, calcOffset);
     // Clamp so we never scroll past the last card
-    calcOffset = Math.min(calcOffset, maxOffset);
+    let calcOffset = Math.min(left, maxOffset);
     return calcOffset;
   }, [focusedIndex, cardWidth, cardGap, numCards, viewportWidth, sidePadding]);
 
