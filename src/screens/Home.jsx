@@ -11,8 +11,11 @@ import { MagnifyingGlass, Info } from 'stingray-icons';
 import stingrayMusicLogo from '../assets/svg/stingrayMusic.svg';
 import { TRANS_BTN_ICON_SIZE } from '../constants/ui';
 import ChannelInfo from './ChannelInfo';
+// TODO: Remove this once we have a real swimlane
+import GenericSwimlane from '../components/GenericSwimlane';
+import { fakeChannels } from '../data/fakeChannels';
 
-function Home({ onChannelSelect, focusedGroupIndex }) {
+function Home({ onChannelSelect }) {
   // Use plain refs for each card
   const cardRefs = Array.from({ length: 12 }, () => useRef(null));
   const searchRef = useRef(null);
@@ -21,45 +24,52 @@ function Home({ onChannelSelect, focusedGroupIndex }) {
   const slidingSwimlaneRef = useRef(null);
   const swimlaneRef = useRef(null);
 
-  // Step 1: Focus state for swimlane cards
-  const [focusedCard, setFocusedCard] = useState(0);
+  // Define group indices for up/down navigation
+  const HEADER_GROUP = 0;
+  const FILTERS_GROUP = 1;
+  const SWIMLANE_GROUP = 2;
 
-  // Step 3: Keyboard navigation for swimlane
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'ArrowRight') {
-        setFocusedCard((prev) => {
-          const next = Math.min(prev + 1, cardRefs.length - 1);
-          return next;
-        });
-      } else if (e.key === 'ArrowLeft') {
-        setFocusedCard((prev) => {
-          const next = Math.max(prev - 1, 0);
-          return next;
-        });
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [cardRefs.length]);
+  // TEMP: Local focus group state for standalone testing
+  const [focusedGroupIndex, setFocusedGroupIndex] = useState(SWIMLANE_GROUP); // Swimlane focused by default
 
-  // Step 4: Focus the DOM node of the focused card
-  useEffect(() => {
-    const ref = cardRefs[focusedCard];
-    if (ref && ref.current) {
-      ref.current.focus();
-    }
-  }, [focusedCard, cardRefs]);
+  // ---
+  // Legacy swimlane navigation logic (kept for reference):
+  // This logic handled left/right navigation and focus for the old swimlane implementation.
+  // It is commented out so it does not interfere with the new GenericSwimlane,
+  // but is kept here as a reference for offset/parking behavior.
+  // ---
+  // const cardRefs = Array.from({ length: 12 }, () => useRef(null));
+  // const [focusedCard, setFocusedCard] = useState(0);
+  // useEffect(() => {
+  //   const handleKeyDown = (e) => {
+  //     if (e.key === 'ArrowRight') {
+  //       setFocusedCard((prev) => {
+  //         const next = Math.min(prev + 1, cardRefs.length - 1);
+  //         return next;
+  //       });
+  //     } else if (e.key === 'ArrowLeft') {
+  //       setFocusedCard((prev) => {
+  //         const next = Math.max(prev - 1, 0);
+  //         return next;
+  //       });
+  //     }
+  //   };
+  //   window.addEventListener('keydown', handleKeyDown);
+  //   return () => window.removeEventListener('keydown', handleKeyDown);
+  // }, [cardRefs.length]);
+  // useEffect(() => {
+  //   const ref = cardRefs[focusedCard];
+  //   if (ref && ref.current) {
+  //     ref.current.focus();
+  //   }
+  // }, [focusedCard, cardRefs]);
 
   // Example click handler
   const handleCardClick = (channelData) => {
     onChannelSelect(channelData);
   };
 
-  // Define group indices for up/down navigation
-  const HEADER_GROUP = 0;
-  const FILTERS_GROUP = 1;
-  const SWIMLANE_GROUP = 2;
+
 
   return (
     <div
@@ -127,7 +137,8 @@ function Home({ onChannelSelect, focusedGroupIndex }) {
             Test Primary Button
           </Button>
         </div>
-        <SlidingSwimlane focusedIndex={focusedCard} numCards={cardRefs.length}>
+        {/* TODO: Remove this once we have a real swimlane */}
+        {/* <SlidingSwimlane focusedIndex={focusedCard} numCards={cardRefs.length}>
           <Swimlane
             ref={swimlaneRef}
             groupIndex={SWIMLANE_GROUP}
@@ -151,7 +162,34 @@ function Home({ onChannelSelect, focusedGroupIndex }) {
               </KeyboardWrapper>
             ))}
           </Swimlane>
-        </SlidingSwimlane>
+        </SlidingSwimlane> */}
+        {/*
+          Hybrid navigation approach:
+          - Parent (Home) manages which group is focused (header, filters, swimlane)
+          - Swimlane manages its own left/right navigation and focus ring
+          - Pass focused, onSelect, and onFocusChange to GenericSwimlane
+        */}
+        <GenericSwimlane
+          items={fakeChannels}
+          renderItem={(channel, i, focused) => (
+            <ChannelCard
+              key={channel.id}
+              title={channel.title}
+              thumbnailUrl={channel.thumbnailUrl}
+              onClick={() => onChannelSelect(channel)}
+              focused={focused} // Only the focused card shows the focus ring
+            />
+          )}
+          maxItems={12}
+          fallbackItem={<div>No channels available</div>}
+          // New props for navigation/focus
+          focused={focusedGroupIndex === SWIMLANE_GROUP} // Only handle keys when swimlane is focused
+          onSelect={onChannelSelect} // Called when Enter/OK is pressed on a card
+          onFocusChange={(index) => {
+            /* Optional: update parent memory or analytics here */
+            // console.log('Swimlane focused card:', index);
+          }}
+        />
       </div>
       {/* Ad banner is outside the navigation context and not focusable */}
       <AdBanner />
