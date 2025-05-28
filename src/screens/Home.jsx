@@ -10,6 +10,7 @@ import AdBanner from '../components/AdBanner';
 import { MagnifyingGlass, Info } from 'stingray-icons';
 import stingrayMusicLogo from '../assets/svg/stingrayMusic.svg';
 import { TRANS_BTN_ICON_SIZE } from '../constants/ui';
+import ChannelInfo from './ChannelInfo';
 
 function Home({ onChannelSelect }) {
   // Use plain refs for each card
@@ -27,9 +28,15 @@ function Home({ onChannelSelect }) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowRight') {
-        setFocusedCard((prev) => Math.min(prev + 1, cardRefs.length - 1));
+        setFocusedCard((prev) => {
+          const next = Math.min(prev + 1, cardRefs.length - 1);
+          return next;
+        });
       } else if (e.key === 'ArrowLeft') {
-        setFocusedCard((prev) => Math.max(prev - 1, 0));
+        setFocusedCard((prev) => {
+          const next = Math.max(prev - 1, 0);
+          return next;
+        });
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -118,15 +125,20 @@ function Home({ onChannelSelect }) {
         <SlidingSwimlane focusedIndex={focusedCard} numCards={cardRefs.length}>
           <Swimlane ref={swimlaneRef}>
             {cardRefs.map((ref, i) => (
-              <ChannelCard
+              <KeyboardWrapper
                 key={i}
                 ref={ref}
-                data-stable-id={`home-card-${i + 1}`}
-                title={`Sample Channel ${i + 1}`}
-                thumbnailUrl={`https://picsum.photos/300/300?${i + 1}`}
-                onClick={() => handleCardClick({ id: i + 1, title: `Sample Channel ${i + 1}` })}
-                focused={focusedCard === i}
-              />
+                onSelect={onChannelSelect}
+                selectData={{ id: i + 1, title: `Sample Channel ${i + 1}` }}
+              >
+                <ChannelCard
+                  data-stable-id={`home-card-${i + 1}`}
+                  title={`Sample Channel ${i + 1}`}
+                  thumbnailUrl={`https://picsum.photos/300/300?${i + 1}`}
+                  onClick={() => handleCardClick({ id: i + 1, title: `Sample Channel ${i + 1}` })}
+                  focused={focusedCard === i}
+                />
+              </KeyboardWrapper>
             ))}
           </Swimlane>
         </SlidingSwimlane>

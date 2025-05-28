@@ -1,31 +1,32 @@
 import React from 'react';
 
 /**
- * KeyboardWrapper - A generic wrapper component for keyboard navigation
+ * KeyboardWrapper - TV navigation utility
  *
- * This component works exactly like EnterKeyWrapper but accepts any component as a child.
- * It will:
- * 1. Accept any child component
- * 2. Pass Enter key events to the child via onKeyDown
- * 3. Forward all props and ref to the child (the child must be a focusable DOM element)
- * 4. Does NOT handle focus itself (focus is managed by Norigin and the browser)
+ * - Wraps a single focusable child.
+ * - Calls onSelect with selectData when Enter is pressed.
+ * - Keeps navigation logic out of presentational components (best practice).
  *
- * Best practice: The child should be the focusable element (with tabIndex and ref),
- * so Norigin can manage focus and focus rings correctly for TV navigation.
+ * Props:
+ *   - onSelect: function to call when Enter is pressed (receives selectData, event)
+ *   - selectData: any data to pass to onSelect (e.g., channel info)
+ *   - children: the focusable child element
+ *   - ref: forwarded to the child
  */
-
-const KeyboardWrapper = React.forwardRef(({ onSelect, children, ...props }, ref) => {
+const KeyboardWrapper = React.forwardRef(({ onSelect, children, selectData }, ref) => {
+  // Handles keydown events for TV remote/keyboard
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && onSelect) {
-      onSelect();
+    if (e.key === 'Enter') {
+      // Pass selectData and event to onSelect handler
+      if (onSelect) onSelect(selectData, e);
     }
   };
 
-  // Pass key handling and ref to the child, do not handle focus here
+  // Clone the child to inject ref and onKeyDown handler
+  // This keeps KeyboardWrapper generic and reusable
   return React.cloneElement(children, {
     ref,
     onKeyDown: handleKeyDown,
-    ...props
   });
 });
 

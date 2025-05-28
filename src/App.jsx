@@ -28,16 +28,6 @@ function AppContent() {
   };
 
   const popScreen = () => {
-    // Save focus before leaving current screen
-    const currentScreen = screenStack[screenStack.length - 1];
-    const focusedElement = document.querySelector('[data-focus-key]:focus');
-    if (focusedElement) {
-      const stableId = focusedElement.getAttribute('data-stable-id');
-      if (stableId) {
-        saveFocus(currentScreen, stableId);
-      }
-    }
-
     setScreenStack(screenStack.slice(0, -1));
     const previousScreen = screenStack[screenStack.length - 2];
     if (previousScreen === 'home') {
@@ -58,40 +48,39 @@ function AppContent() {
     }
   };
 
-  // Global 'B' key handler
+  // Global 'Escape' key handler
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key.toLowerCase() === 'b' && screenStack.length > 1) {
+      if (e.key === 'Escape' && screenStack.length > 1) {
         e.preventDefault();
         popScreen();
       }
     };
-
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [screenStack]);
 
   // Get current screen
   const currentScreen = screenStack[screenStack.length - 1];
-
+  
   return (
     <div className="app">
       {currentScreen === 'home' && (
         <Home 
-          onChannelSelect={(channel) => pushScreen('channelInfo', channel)}
+          onChannelSelect={(channel) => { pushScreen('channelInfo', channel); }}
         />
       )}
       {currentScreen === 'channelInfo' && (
         <ChannelInfo 
           channel={selectedChannel}
-          onBack={popScreen}
-          onPlay={() => pushScreen('player', selectedChannel)}
+          onBack={() => { popScreen(); }}
+          onPlay={() => { pushScreen('player', selectedChannel); }}
         />
       )}
       {currentScreen === 'player' && (
         <Player 
           channel={selectedChannel}
-          onBack={popScreen}
+          onBack={() => { popScreen(); }}
         />
       )}
     </div>
