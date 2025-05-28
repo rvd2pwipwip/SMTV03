@@ -12,7 +12,7 @@ import stingrayMusicLogo from '../assets/svg/stingrayMusic.svg';
 import { TRANS_BTN_ICON_SIZE } from '../constants/ui';
 import ChannelInfo from './ChannelInfo';
 
-function Home({ onChannelSelect }) {
+function Home({ onChannelSelect, focusedGroupIndex }) {
   // Use plain refs for each card
   const cardRefs = Array.from({ length: 12 }, () => useRef(null));
   const searchRef = useRef(null);
@@ -55,6 +55,11 @@ function Home({ onChannelSelect }) {
   const handleCardClick = (channelData) => {
     onChannelSelect(channelData);
   };
+
+  // Define group indices for up/down navigation
+  const HEADER_GROUP = 0;
+  const FILTERS_GROUP = 1;
+  const SWIMLANE_GROUP = 2;
 
   return (
     <div
@@ -123,7 +128,12 @@ function Home({ onChannelSelect }) {
           </Button>
         </div>
         <SlidingSwimlane focusedIndex={focusedCard} numCards={cardRefs.length}>
-          <Swimlane ref={swimlaneRef}>
+          <Swimlane
+            ref={swimlaneRef}
+            groupIndex={SWIMLANE_GROUP}
+            focusedGroupIndex={focusedGroupIndex}
+            cardRefs={cardRefs}
+          >
             {cardRefs.map((ref, i) => (
               <KeyboardWrapper
                 key={i}

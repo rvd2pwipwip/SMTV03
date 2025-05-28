@@ -3,7 +3,22 @@ import Home from './screens/Home';
 import ChannelInfo from './screens/ChannelInfo';
 import Player from './screens/Player';
 import { FocusMemoryProvider, useFocusMemory } from './contexts/FocusMemoryContext';
+import { FocusProvider, useFocusContext } from './contexts/FocusContext';
 import './styles/App.css';
+
+// GlobalKeyHandler handles up/down keys using FocusContext
+function GlobalKeyHandler({ groupCount }) {
+  const { moveVertical } = useFocusContext();
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowUp') moveVertical('up');
+      if (e.key === 'ArrowDown') moveVertical('down');
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [moveVertical]);
+  return null;
+}
 
 function AppContent() {
   const [screenStack, setScreenStack] = useState(['home']);
@@ -60,14 +75,21 @@ function AppContent() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [screenStack]);
 
+  // Define the number of vertical groups (header, filters, swimlane)
+  const groupCount = 3;
+
   // Get current screen
   const currentScreen = screenStack[screenStack.length - 1];
-  
+  // Get focusedGroupIndex from context
+  const { focusedGroupIndex } = useFocusContext();
+
   return (
     <div className="app">
+      <GlobalKeyHandler groupCount={groupCount} />
       {currentScreen === 'home' && (
         <Home 
           onChannelSelect={(channel) => { pushScreen('channelInfo', channel); }}
+          focusedGroupIndex={focusedGroupIndex}
         />
       )}
       {currentScreen === 'channelInfo' && (
@@ -89,9 +111,11 @@ function AppContent() {
 
 function App() {
   return (
-    <FocusMemoryProvider>
-      <AppContent />
-    </FocusMemoryProvider>
+    <FocusProvider groupCount={3}>
+      <FocusMemoryProvider>
+        <AppContent />
+      </FocusMemoryProvider>
+    </FocusProvider>
   );
 }
 
