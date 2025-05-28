@@ -1,24 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 
 /**
- * GenericSwimlane - Step 2: Self-contained focus and left/right navigation
+ * GenericSwimlane - Step 4: Offset/parking logic with CSS variable padding
  *
- * Now handles:
- * - Internal focusedIndex state
- * - Left/right/enter key events (when focused)
- * - Calls onSelect/onFocusChange callbacks
- * - Passes focused to renderItem
- * - Still generic: works for any item type
- *
- * Props:
- *   - items: array of data to render
- *   - renderItem: function (item, i, focused) => ReactNode
- *   - maxItems: maximum number of items to display (default: 12)
- *   - fallbackItem: what to render if items is empty (optional)
- *   - className: for custom styling (optional)
- *   - focused: is this swimlane the active group? (parent controls)
- *   - onSelect: called with (item, index) when Enter/OK is pressed (optional)
- *   - onFocusChange: called with (index) when focusedIndex changes (optional)
+ * - Uses left padding var(--screen-side-padding) for viewport and maxOffset
+ * - Offset logic matches old SlidingSwimlane: focused card stays in place until last card is fully visible
+ * - Learning comments throughout
  */
 export default function GenericSwimlane({
   items = [],
@@ -29,6 +16,7 @@ export default function GenericSwimlane({
   focused = false,
   onSelect,
   onFocusChange,
+  maxVisible = 6, // How many cards visible at once
 }) {
   // Clamp the number of items to maxItems
   const displayItems = items.slice(0, maxItems);
@@ -38,6 +26,24 @@ export default function GenericSwimlane({
 
   // Ref to the container div for key event handling
   const containerRef = useRef(null);
+
+  // --- Layout constants ---
+  const CARD_WIDTH = 300;
+  const CARD_GAP = 24;
+  // Use CSS variable for side padding (matches old swimlane)
+  const SIDE_PADDING = 64; // fallback for JS math, but use CSS var in style
+  const viewportWidth = maxVisible * CARD_WIDTH + (maxVisible - 1) * CARD_GAP;
+  const totalContentWidth = displayItems.length * (CARD_WIDTH + CARD_GAP);
+
+  // --- Offset/Parking Logic (matches SlidingSwimlane) ---
+  const offset = useMemo(() => {
+    const cardFullWidth = CARD_WIDTH + CARD_GAP;
+    const left = focusedIndex * cardFullWidth;
+    // maxOffset: last card parks at right edge, includes left padding
+    const maxOffset = Math.max(0, totalContentWidth - viewportWidth + SIDE_PADDING);
+    // Clamp so we never scroll past the last card
+    return Math.min(left, maxOffset);
+  }, [focusedIndex, CARD_WIDTH, CARD_GAP, displayItems.length, viewportWidth, totalContentWidth]);
 
   // When swimlane becomes focused, focus the container div (for accessibility)
   useEffect(() => {
@@ -71,7 +77,6 @@ export default function GenericSwimlane({
         e.preventDefault();
       }
     };
-    // Attach keydown listener to window (TV remotes often don't focus DOM nodes)
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [focused, displayItems, focusedIndex, onSelect, onFocusChange]);
@@ -82,21 +87,44 @@ export default function GenericSwimlane({
     if (onFocusChange) onFocusChange(0);
   }, [items, focused]);
 
-  // Learning: This is the basic horizontal row, now with focus and navigation
+  // --- Render ---
+  // Viewport: clips the row, fixed width, left padding via CSS var
+  // Row: slides left/right via transform
   return (
     <div
-      ref={containerRef}
-      className={`generic-swimlane-row ${className}`}
-      style={{ display: 'flex', gap: 24, outline: 'none' }}
-      tabIndex={-1} // Make div programmatically focusable
-      aria-label="Swimlane"
-      role="list"
+      className={`generic-swimlane-viewport ${className}`}
+      style={{
+        width: viewportWidth,
+        overflow: 'hidden',
+        outline: focused ? '2px solid #fff' : 'none',
+        borderRadius: 16,
+        margin: '0 auto',
+        paddingLeft: 'var(--screen-side-padding, 64px)', // Use CSS var for left padding
+      }}
+      tabIndex={-1}
+      aria-label="Swimlane viewport"
+      role="region"
     >
-      {displayItems.length === 0
-        ? fallbackItem
-        : displayItems.map((item, i) =>
-            renderItem(item, i, focused && i === focusedIndex)
-          )}
+      <div
+        ref={containerRef}
+        className="generic-swimlane-row"
+        style={{
+          display: 'flex',
+          gap: CARD_GAP,
+          transform: `translateX(-${offset}px)`,
+          transition: 'transform 0.3s cubic-bezier(.4,1.3,.6,1)',
+          outline: 'none',
+        }}
+        tabIndex={-1} // Make div programmatically focusable
+        aria-label="Swimlane"
+        role="list"
+      >
+        {displayItems.length === 0
+          ? fallbackItem
+          : displayItems.map((item, i) =>
+              renderItem(item, i, focused && i === focusedIndex)
+            )}
+      </div>
     </div>
   );
 } 
