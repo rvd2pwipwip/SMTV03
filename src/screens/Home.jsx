@@ -12,7 +12,7 @@ import stingrayMusicLogo from '../assets/svg/stingrayMusic.svg';
 import { TRANS_BTN_ICON_SIZE } from '../constants/ui';
 import ChannelInfo from './ChannelInfo';
 // TODO: Remove this once we have a real swimlane
-import GenericSwimlane from '../components/GenericSwimlane';
+import FixedSwimlane from '../components/FixedSwimlane';
 import { fakeChannels } from '../data/fakeChannels';
 
 function Home({ onChannelSelect }) {
@@ -167,9 +167,9 @@ function Home({ onChannelSelect }) {
           Hybrid navigation approach:
           - Parent (Home) manages which group is focused (header, filters, swimlane)
           - Swimlane manages its own left/right navigation and focus ring
-          - Pass focused, onSelect, and onFocusChange to GenericSwimlane
+          - Pass focused, onSelect, and onFocusChange to FixedSwimlane
         */}
-        <GenericSwimlane
+        <FixedSwimlane
           items={fakeChannels}
           renderItem={(channel, i, focused) => (
             <ChannelCard

@@ -114,7 +114,7 @@ export default function FixedSwimlane({
   // Row: slides left/right via transform
   return (
     <div
-      className={`generic-swimlane-viewport ${className}`}
+      className={`fixed-swimlane-viewport ${className}`}
       style={{
         width: viewportWidth,
         margin: '0 auto',
@@ -127,7 +127,7 @@ export default function FixedSwimlane({
     >
       <div
         ref={containerRef}
-        className="generic-swimlane-row"
+        className="fixed-swimlane-row"
         style={{
           display: 'flex',
           gap: CARD_GAP,
