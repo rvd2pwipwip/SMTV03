@@ -11,6 +11,8 @@ import { TRANS_BTN_ICON_SIZE } from '../constants/ui';
 import ChannelInfo from './ChannelInfo';
 import FixedSwimlane from '../components/FixedSwimlane';
 import { fakeChannels } from '../data/fakeChannels';
+import VariableSwimlane from '../components/VariableSwimlane';
+import { fakeFilters } from '../data/fakeFilters';
 
 function Home({ onChannelSelect }) {
   // Use plain refs for each card
@@ -28,6 +30,9 @@ function Home({ onChannelSelect }) {
 
   // TEMP: Local focus group state for standalone testing
   const [focusedGroupIndex, setFocusedGroupIndex] = useState(SWIMLANE_GROUP); // Swimlane focused by default
+
+  // Track active filter for the filter swimlane
+  const [activeFilterId, setActiveFilterId] = useState(fakeFilters[0]?.id);
 
   // ---
   // Legacy swimlane navigation logic (kept for reference):
@@ -124,16 +129,32 @@ function Home({ onChannelSelect }) {
             />
           </div>
         </div>
-        <div className="home-filters" style={{ width: '100%', display: 'flex', justifyContent: 'center', margin: '32px 0' }}>
-          <Button
-            ref={testButtonRef}
-            data-stable-id="home-test-primary-button"
-            variant="primary"
-            size="medium"
-          >
-            Test Primary Button
-          </Button>
-        </div>
+        {/*
+          Replacing the old home-filters div with VariableSwimlane for filter buttons.
+          - Uses Button.tsx (medium, secondary for all except active, which is medium primary)
+          - Focus ring is handled by Button component
+        */}
+        <VariableSwimlane
+          items={fakeFilters}
+          renderItem={(filter, i, focused) => (
+            <Button
+              key={filter.id}
+              variant={filter.id === activeFilterId ? 'primary' : 'secondary'}
+              size="medium"
+              focused={focused}
+              onClick={() => setActiveFilterId(filter.id)}
+              aria-label={filter.label}
+            >
+              {filter.label}
+            </Button>
+          )}
+          // For now, always focused; later, use focusedGroupIndex === FILTERS_GROUP
+          focused={true}
+          onSelect={(filter) => setActiveFilterId(filter.id)}
+          onFocusChange={(index) => {
+            // Optional: handle focus memory/analytics
+          }}
+        />
 
         <FixedSwimlane
           items={fakeChannels}
