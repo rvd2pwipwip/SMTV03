@@ -95,11 +95,9 @@ export default function GenericSwimlane({
       className={`generic-swimlane-viewport ${className}`}
       style={{
         width: viewportWidth,
-        overflow: 'hidden',
-        outline: focused ? '2px solid #fff' : 'none',
-        borderRadius: 16,
+        outline: 'none',
         margin: '0 auto',
-        paddingLeft: 'var(--screen-side-padding, 64px)', // Use CSS var for left padding
+        paddingLeft: 'var(--screen-side-padding, 100px)', // Use CSS var for left padding
       }}
       tabIndex={-1}
       aria-label="Swimlane viewport"
