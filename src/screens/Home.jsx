@@ -2,8 +2,6 @@ import React, { useRef, useState, useEffect } from 'react';
 import KeyboardWrapper from '../components/KeyboardWrapper';
 import { ChannelCard, Button } from '@smtv/tv-component-library';
 import '@smtv/tv-component-library/dist/style.css';
-import Swimlane from '../components/Swimlane';
-import SlidingSwimlane from '../components/SlidingSwimlane';
 import '../styles/App.css';
 import { useFocusMemory } from '../contexts/FocusMemoryContext';
 import AdBanner from '../components/AdBanner';
@@ -11,7 +9,6 @@ import { MagnifyingGlass, Info } from 'stingray-icons';
 import stingrayMusicLogo from '../assets/svg/stingrayMusic.svg';
 import { TRANS_BTN_ICON_SIZE } from '../constants/ui';
 import ChannelInfo from './ChannelInfo';
-// TODO: Remove this once we have a real swimlane
 import FixedSwimlane from '../components/FixedSwimlane';
 import { fakeChannels } from '../data/fakeChannels';
 
@@ -137,38 +134,7 @@ function Home({ onChannelSelect }) {
             Test Primary Button
           </Button>
         </div>
-        {/* TODO: Remove this once we have a real swimlane */}
-        {/* <SlidingSwimlane focusedIndex={focusedCard} numCards={cardRefs.length}>
-          <Swimlane
-            ref={swimlaneRef}
-            groupIndex={SWIMLANE_GROUP}
-            focusedGroupIndex={focusedGroupIndex}
-            cardRefs={cardRefs}
-          >
-            {cardRefs.map((ref, i) => (
-              <KeyboardWrapper
-                key={i}
-                ref={ref}
-                onSelect={onChannelSelect}
-                selectData={{ id: i + 1, title: `Sample Channel ${i + 1}` }}
-              >
-                <ChannelCard
-                  data-stable-id={`home-card-${i + 1}`}
-                  title={`Sample Channel ${i + 1}`}
-                  thumbnailUrl={`https://picsum.photos/300/300?${i + 1}`}
-                  onClick={() => handleCardClick({ id: i + 1, title: `Sample Channel ${i + 1}` })}
-                  focused={focusedCard === i}
-                />
-              </KeyboardWrapper>
-            ))}
-          </Swimlane>
-        </SlidingSwimlane> */}
-        {/*
-          Hybrid navigation approach:
-          - Parent (Home) manages which group is focused (header, filters, swimlane)
-          - Swimlane manages its own left/right navigation and focus ring
-          - Pass focused, onSelect, and onFocusChange to FixedSwimlane
-        */}
+
         <FixedSwimlane
           items={fakeChannels}
           renderItem={(channel, i, focused) => (
