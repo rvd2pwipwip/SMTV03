@@ -1,10 +1,25 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 
 /**
- * GenericSwimlane - Step 4: Offset/parking logic with CSS variable padding
+ * Helper to get the value of --screen-side-padding from CSS, with fallback to 100
+ */
+function getSidePadding() {
+  if (typeof window !== 'undefined') {
+    const root = document.documentElement;
+    const value = getComputedStyle(root).getPropertyValue('--screen-side-padding');
+    // Remove 'px' and parse as integer
+    const parsed = parseInt(value, 10);
+    return isNaN(parsed) ? 100 : parsed;
+  }
+  return 100;
+}
+
+/**
+ * GenericSwimlane - Step 5: Single source of truth for side padding (CSS variable)
  *
- * - Uses left padding var(--screen-side-padding) for viewport and maxOffset
- * - Offset logic matches old SlidingSwimlane: focused card stays in place until last card is fully visible
+ * - Uses --screen-side-padding from CSS for both JS math and CSS style
+ * - Fallback to 100 if variable is not set
+ * - maxOffset includes both left and right paddings
  * - Learning comments throughout
  */
 export default function GenericSwimlane({
@@ -30,20 +45,20 @@ export default function GenericSwimlane({
   // --- Layout constants ---
   const CARD_WIDTH = 300;
   const CARD_GAP = 24;
-  // Use CSS variable for side padding (matches old swimlane)
-  const SIDE_PADDING = 64; // fallback for JS math, but use CSS var in style
+  // Get side padding from CSS variable (single source of truth)
+  const sidePadding = getSidePadding();
   const viewportWidth = maxVisible * CARD_WIDTH + (maxVisible - 1) * CARD_GAP;
   const totalContentWidth = displayItems.length * (CARD_WIDTH + CARD_GAP);
 
-  // --- Offset/Parking Logic (matches SlidingSwimlane) ---
+  // --- Offset/Parking Logic (mirrored paddings) ---
   const offset = useMemo(() => {
     const cardFullWidth = CARD_WIDTH + CARD_GAP;
     const left = focusedIndex * cardFullWidth;
-    // maxOffset: last card parks at right edge, includes left padding
-    const maxOffset = Math.max(0, totalContentWidth - viewportWidth + SIDE_PADDING);
+    // maxOffset: last card parks at right edge, includes both paddings
+    const maxOffset = Math.max(0, totalContentWidth - viewportWidth + 2 * sidePadding);
     // Clamp so we never scroll past the last card
     return Math.min(left, maxOffset);
-  }, [focusedIndex, CARD_WIDTH, CARD_GAP, displayItems.length, viewportWidth, totalContentWidth]);
+  }, [focusedIndex, CARD_WIDTH, CARD_GAP, displayItems.length, viewportWidth, totalContentWidth, sidePadding]);
 
   // When swimlane becomes focused, focus the container div (for accessibility)
   useEffect(() => {
@@ -88,16 +103,16 @@ export default function GenericSwimlane({
   }, [items, focused]);
 
   // --- Render ---
-  // Viewport: clips the row, fixed width, left padding via CSS var
+  // Viewport: clips the row, fixed width, left/right padding via CSS var
   // Row: slides left/right via transform
   return (
     <div
       className={`generic-swimlane-viewport ${className}`}
       style={{
         width: viewportWidth,
-        outline: 'none',
         margin: '0 auto',
         paddingLeft: 'var(--screen-side-padding, 100px)', // Use CSS var for left padding
+        paddingRight: 'var(--screen-side-padding, 100px)', // Use CSS var for right padding
       }}
       tabIndex={-1}
       aria-label="Swimlane viewport"
