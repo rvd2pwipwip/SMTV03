@@ -1,6 +1,13 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 
 /**
+ * FixedSwimlane (formerly GenericSwimlane)
+ *
+ * This component is for fixed-width, card-style swimlanes (e.g., channels).
+ * For variable-width items (e.g., filter buttons), use VariableSwimlane.
+ */
+
+/**
  * Helper to get the value of --screen-side-padding from CSS, with fallback to 100
  */
 function getSidePadding() {
@@ -22,7 +29,7 @@ function getSidePadding() {
  * - maxOffset includes both left and right paddings
  * - Learning comments throughout
  */
-export default function GenericSwimlane({
+export default function FixedSwimlane({
   items = [],
   renderItem,
   maxItems = 12,
