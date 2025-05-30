@@ -24,6 +24,19 @@ function getSidePadding() {
 }
 
 /**
+ * Helper to get the value of --spacing-xl from CSS, with fallback to 32
+ */
+function getCardGap() {
+  if (typeof window !== 'undefined') {
+    const root = document.documentElement;
+    const value = getComputedStyle(root).getPropertyValue('--spacing-xl');
+    const parsed = parseInt(value, 10);
+    return isNaN(parsed) ? 32 : parsed;
+  }
+  return 32;
+}
+
+/**
  * GenericSwimlane - Step 5: Single source of truth for side padding (CSS variable)
  *
  * - Uses --screen-side-padding from CSS for both JS math and CSS style
@@ -58,7 +71,7 @@ export default function FixedSwimlane({
 
   // --- Layout constants ---
   const CARD_WIDTH = 300;
-  const CARD_GAP = 24;
+  const CARD_GAP = getCardGap(); // Use design token for gap
   // Get side padding from CSS variable (single source of truth)
   const sidePadding = getSidePadding();
   const viewportWidth = maxVisible * CARD_WIDTH + (maxVisible - 1) * CARD_GAP;

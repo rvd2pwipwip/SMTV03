@@ -65,8 +65,20 @@ export default function VariableSwimlane({
   // Navigation: include More item if present
   const numItems = items.length + (showMore ? 1 : 0);
 
-  // Offset/parking logic: scroll so focused item is visible, park last item
-  const GAP = 30;
+  /**
+   * Helper to get the value of --spacing-xl from CSS, with fallback to 32
+   */
+  function getGap() {
+    if (typeof window !== 'undefined') {
+      const root = document.documentElement;
+      const value = getComputedStyle(root).getPropertyValue('--spacing-xl');
+      const parsed = parseInt(value, 10);
+      return isNaN(parsed) ? 32 : parsed;
+    }
+    return 32;
+  }
+
+  const GAP = getGap(); // Use design token for gap
   const offset = useMemo(() => {
     // Sum widths and gaps of all items before the focused one
     let sum = 0;
@@ -76,7 +88,7 @@ export default function VariableSwimlane({
     // Clamp so last item parks at right edge
     const maxOffset = Math.max(0, totalContentWidth - viewportWidth);
     return Math.min(sum, maxOffset);
-  }, [focusedIndex, itemWidths, totalContentWidth, viewportWidth]);
+  }, [focusedIndex, itemWidths, totalContentWidth, viewportWidth, GAP]);
 
   // Keyboard navigation
   React.useEffect(() => {
@@ -138,7 +150,7 @@ export default function VariableSwimlane({
         className="variable-swimlane-row"
         style={{
           display: 'flex',
-          gap: 30,
+          gap: GAP,
           transform: `translateX(-${offset}px)`,
           transition: 'transform 0.3s cubic-bezier(.4,1.3,.6,1)',
         }}
