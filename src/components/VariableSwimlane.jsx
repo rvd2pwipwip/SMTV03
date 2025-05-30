@@ -41,6 +41,7 @@ export default function VariableSwimlane({
   width = '100%', // Width prop, default to fill parent
   maxContentWidthRatio = 2.5, // max content width = 2.5x viewport
   focusedIndex: controlledFocusedIndex, // Controlled focused index
+  sidePadding = 0, // Side padding prop, default 0
 }) {
   // Refs for each item to measure width
   const itemRefs = useRef([]);
@@ -94,20 +95,6 @@ export default function VariableSwimlane({
   // Navigation: include More item if present
   const numItems = items.length + (showMore ? 1 : 0);
 
-  /**
-   * Helper to get the value of --screen-side-padding from CSS, with fallback to 100
-   */
-  function getSidePadding() {
-    if (typeof window !== 'undefined') {
-      const root = document.documentElement;
-      const value = getComputedStyle(root).getPropertyValue('--screen-side-padding');
-      const parsed = parseInt(value, 10);
-      return isNaN(parsed) ? 100 : parsed;
-    }
-    return 100;
-  }
-
-  const sidePadding = getSidePadding(); // Use design token for safe zone
   const offset = useMemo(() => {
     // Sum widths and gaps of all items before the focused one
     let sum = 0;
@@ -115,8 +102,6 @@ export default function VariableSwimlane({
       sum += (itemWidths[i] || 0) + GAP;
     }
     // Clamp so row's right edge parks at the inner edge of the right padding
-    // GAP/2 is added because in a flex row with gaps, the last item's right edge is half a gap away from the true end of the row.
-    // This ensures the row's right edge aligns perfectly with the right padding, matching FixedSwimlane and TV-native parking behavior.
     const maxOffset = Math.max(0, totalContentWidth - viewportWidth + 2 * sidePadding);
     return Math.min(sum, maxOffset);
   }, [focusedIndex, itemWidths, totalContentWidth, viewportWidth, GAP, sidePadding]);
@@ -177,8 +162,8 @@ export default function VariableSwimlane({
         overflow: 'visible', 
         display: 'flex', 
         alignItems: 'center', 
-        paddingLeft: 'var(--screen-side-padding, 100px)', 
-        paddingRight: 'var(--screen-side-padding, 100px)',
+        paddingLeft: sidePadding,
+        paddingRight: sidePadding,
       }}
       ref={containerRef}
       tabIndex={-1}

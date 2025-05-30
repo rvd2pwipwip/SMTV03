@@ -9,21 +9,8 @@ import React, { useEffect, useRef, useState, useMemo, useLayoutEffect } from 're
  * Now supports a controlled focusedIndex prop for focus memory.
  *
  * Updated: Now fills parent container width by default, or uses a set width if provided.
+ * Updated: sidePadding is now a prop (default 0), not a CSS variable or internal function.
  */
-
-/**
- * Helper to get the value of --screen-side-padding from CSS, with fallback to 100
- */
-function getSidePadding() {
-  if (typeof window !== 'undefined') {
-    const root = document.documentElement;
-    const value = getComputedStyle(root).getPropertyValue('--screen-side-padding');
-    // Remove 'px' and parse as integer
-    const parsed = parseInt(value, 10);
-    return isNaN(parsed) ? 100 : parsed;
-  }
-  return 100;
-}
 
 /**
  * Helper to get the value of --spacing-xl from CSS, with fallback to 32
@@ -58,6 +45,7 @@ export default function FixedSwimlane({
   maxVisible = 6, // How many cards visible at once (used for fallback only)
   focusedIndex: controlledFocusedIndex, // New: controlled focused index
   width = '100%', // Width prop, default to fill parent
+  sidePadding = 0, // New: side padding prop, default 0
 }) {
   // Clamp the number of items to maxItems
   const displayItems = items.slice(0, maxItems);
@@ -76,8 +64,6 @@ export default function FixedSwimlane({
   // --- Layout constants ---
   const CARD_WIDTH = 300;
   const CARD_GAP = getCardGap(); // Use design token for gap
-  // Get side padding from CSS variable (single source of truth)
-  const sidePadding = getSidePadding();
 
   // Measure container width after render
   useLayoutEffect(() => {
@@ -154,7 +140,7 @@ export default function FixedSwimlane({
   }, [items, focused, controlledFocusedIndex, onFocusChange]);
 
   // --- Render ---
-  // Viewport: clips the row, width is set by prop or parent, left/right padding via CSS var
+  // Viewport: clips the row, width is set by prop or parent, left/right padding via prop
   // Row: slides left/right via transform
   return (
     <div
@@ -162,8 +148,8 @@ export default function FixedSwimlane({
       style={{
         width: width || '100%',
         margin: '0 auto',
-        paddingLeft: 'var(--screen-side-padding, 100px)', // Use CSS var for left padding
-        paddingRight: 'var(--screen-side-padding, 100px)', // Use CSS var for right padding
+        paddingLeft: sidePadding,
+        paddingRight: sidePadding,
         outline: 'none',
       }}
       tabIndex={-1}

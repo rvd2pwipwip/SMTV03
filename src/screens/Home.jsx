@@ -13,6 +13,7 @@ import { fakeChannels } from '../data/fakeChannels';
 import VariableSwimlane from '../components/VariableSwimlane';
 import { fakeFilters } from '../data/fakeFilters';
 import { useFocusNavigation } from '../contexts/FocusNavigationContext';
+import { getSidePadding } from '../utils/ui';
 
 function Home({ onChannelSelect }) {
   // Use plain refs for each card
@@ -103,6 +104,9 @@ function Home({ onChannelSelect }) {
       }
     }
   }, [focusedGroupIndex, hasVisitedHeader, headerFocusedIndex, setGroupFocusMemory]);
+
+  // Get side padding value for swimlanes
+  const sidePadding = getSidePadding();
 
   // Example click handler
   const handleCardClick = (channelData) => {
@@ -203,6 +207,7 @@ function Home({ onChannelSelect }) {
             setFiltersFocusedIndex(index);
             setGroupFocusMemory(FILTERS_GROUP, { focusedIndex: index });
           }}
+          sidePadding={sidePadding}
         />
 
         <FixedSwimlane
@@ -225,6 +230,7 @@ function Home({ onChannelSelect }) {
             setGroupFocusMemory(SWIMLANE_GROUP, { focusedIndex: index });
           }}
           onSelect={onChannelSelect}
+          sidePadding={sidePadding}
         />
       </div>
       {/* Ad banner is outside the navigation context and not focusable */}
