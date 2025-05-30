@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useLayoutEffect } from 'react';
 
 /**
  * FixedSwimlane (formerly GenericSwimlane)
@@ -7,6 +7,8 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
  * For variable-width items (e.g., filter buttons), use VariableSwimlane.
  *
  * Now supports a controlled focusedIndex prop for focus memory.
+ *
+ * Updated: Now fills parent container width by default, or uses a set width if provided.
  */
 
 /**
@@ -53,8 +55,9 @@ export default function FixedSwimlane({
   focused = false,
   onSelect,
   onFocusChange,
-  maxVisible = 6, // How many cards visible at once
+  maxVisible = 6, // How many cards visible at once (used for fallback only)
   focusedIndex: controlledFocusedIndex, // New: controlled focused index
+  width = '100%', // Width prop, default to fill parent
 }) {
   // Clamp the number of items to maxItems
   const displayItems = items.slice(0, maxItems);
@@ -66,16 +69,27 @@ export default function FixedSwimlane({
   const focusedIndex =
     typeof controlledFocusedIndex === 'number' ? controlledFocusedIndex : uncontrolledFocusedIndex;
 
-  // Ref to the container div for key event handling
+  // Ref to the container div for key event handling and measuring width
   const containerRef = useRef(null);
+  const [containerWidth, setContainerWidth] = useState(0);
 
   // --- Layout constants ---
   const CARD_WIDTH = 300;
   const CARD_GAP = getCardGap(); // Use design token for gap
   // Get side padding from CSS variable (single source of truth)
   const sidePadding = getSidePadding();
-  const viewportWidth = maxVisible * CARD_WIDTH + (maxVisible - 1) * CARD_GAP;
-  const totalContentWidth = displayItems.length * (CARD_WIDTH + CARD_GAP);
+
+  // Measure container width after render
+  useLayoutEffect(() => {
+    if (containerRef.current) {
+      setContainerWidth(containerRef.current.offsetWidth);
+    }
+  }, [width, items.length]);
+
+  // Fallback viewport width if not yet measured
+  const fallbackViewportWidth = maxVisible * CARD_WIDTH + (maxVisible - 1) * CARD_GAP;
+  const viewportWidth = containerWidth || fallbackViewportWidth;
+  const totalContentWidth = (displayItems.length * CARD_WIDTH) + ((displayItems.length - 1) * CARD_GAP);
 
   // --- Offset/Parking Logic (mirrored paddings) ---
   const offset = useMemo(() => {
@@ -140,23 +154,24 @@ export default function FixedSwimlane({
   }, [items, focused, controlledFocusedIndex, onFocusChange]);
 
   // --- Render ---
-  // Viewport: clips the row, fixed width, left/right padding via CSS var
+  // Viewport: clips the row, width is set by prop or parent, left/right padding via CSS var
   // Row: slides left/right via transform
   return (
     <div
       className={`fixed-swimlane-viewport ${className}`}
       style={{
-        width: viewportWidth,
+        width: width || '100%',
         margin: '0 auto',
         paddingLeft: 'var(--screen-side-padding, 100px)', // Use CSS var for left padding
         paddingRight: 'var(--screen-side-padding, 100px)', // Use CSS var for right padding
+        outline: 'none',
       }}
       tabIndex={-1}
       aria-label="Swimlane viewport"
       role="region"
+      ref={containerRef}
     >
       <div
-        ref={containerRef}
         className="fixed-swimlane-row"
         style={{
           display: 'flex',

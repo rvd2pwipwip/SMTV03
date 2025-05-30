@@ -38,9 +38,9 @@ export default function VariableSwimlane({
   focused = false,
   onSelect,
   onFocusChange,
-  viewportWidth = 1920, // default TV width
+  width = '100%', // Width prop, default to fill parent
   maxContentWidthRatio = 2.5, // max content width = 2.5x viewport
-  focusedIndex: controlledFocusedIndex, // New: controlled focused index
+  focusedIndex: controlledFocusedIndex, // Controlled focused index
 }) {
   // Refs for each item to measure width
   const itemRefs = useRef([]);
@@ -54,6 +54,17 @@ export default function VariableSwimlane({
   const focusedIndex =
     typeof controlledFocusedIndex === 'number' ? controlledFocusedIndex : uncontrolledFocusedIndex;
 
+  // Ref and state for measuring container width
+  const containerRef = useRef(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  // Measure container width after render
+  useLayoutEffect(() => {
+    if (containerRef.current) {
+      setContainerWidth(containerRef.current.offsetWidth);
+    }
+  }, [width, items.length]);
+
   // Helper: measure widths after render
   useLayoutEffect(() => {
     if (!items.length) return;
@@ -63,11 +74,16 @@ export default function VariableSwimlane({
   }, [items]);
 
   // Calculate total content width
+  const GAP = getGap();
   const totalContentWidth = useMemo(() => {
-    return itemWidths.reduce((sum, w) => sum + w, 0) + (itemWidths.length - 1) * 30; // 30px gap
-  }, [itemWidths]);
+    if (itemWidths.length === 0) return 0;
+    return itemWidths.reduce((sum, w) => sum + w, 0) + (itemWidths.length - 1) * GAP;
+  }, [itemWidths, GAP]);
 
   // Calculate max content width
+  // Fallback viewport width if not yet measured
+  const fallbackViewportWidth = 1920;
+  const viewportWidth = containerWidth || fallbackViewportWidth;
   const maxContentWidth = viewportWidth * maxContentWidthRatio;
 
   // Show More item if content is too wide
@@ -92,7 +108,6 @@ export default function VariableSwimlane({
   }
 
   const sidePadding = getSidePadding(); // Use design token for safe zone
-  const GAP = getGap(); // Use design token for gap
   const offset = useMemo(() => {
     // Sum widths and gaps of all items before the focused one
     let sum = 0;
@@ -102,7 +117,7 @@ export default function VariableSwimlane({
     // Clamp so row's right edge parks at the inner edge of the right padding
     // GAP/2 is added because in a flex row with gaps, the last item's right edge is half a gap away from the true end of the row.
     // This ensures the row's right edge aligns perfectly with the right padding, matching FixedSwimlane and TV-native parking behavior.
-    const maxOffset = Math.max(0, totalContentWidth - viewportWidth + 2 * sidePadding + GAP / 2);
+    const maxOffset = Math.max(0, totalContentWidth - viewportWidth + 2 * sidePadding);
     return Math.min(sum, maxOffset);
   }, [focusedIndex, itemWidths, totalContentWidth, viewportWidth, GAP, sidePadding]);
 
@@ -157,7 +172,15 @@ export default function VariableSwimlane({
   return (
     <div
       className={`variable-swimlane-viewport ${className}`}
-      style={{ width: viewportWidth, overflow: 'visible', display: 'flex', alignItems: 'center', paddingLeft: 'var(--screen-side-padding, 100px)', paddingRight: 'var(--screen-side-padding, 100px)' }}
+      style={{ 
+        width: width || '100%',
+        overflow: 'visible', 
+        display: 'flex', 
+        alignItems: 'center', 
+        paddingLeft: 'var(--screen-side-padding, 100px)', 
+        paddingRight: 'var(--screen-side-padding, 100px)',
+      }}
+      ref={containerRef}
       tabIndex={-1}
       aria-label="Variable Swimlane viewport"
       role="region"
