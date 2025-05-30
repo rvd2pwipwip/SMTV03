@@ -5,6 +5,8 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
  *
  * This component is for fixed-width, card-style swimlanes (e.g., channels).
  * For variable-width items (e.g., filter buttons), use VariableSwimlane.
+ *
+ * Now supports a controlled focusedIndex prop for focus memory.
  */
 
 /**
@@ -39,12 +41,17 @@ export default function FixedSwimlane({
   onSelect,
   onFocusChange,
   maxVisible = 6, // How many cards visible at once
+  focusedIndex: controlledFocusedIndex, // New: controlled focused index
 }) {
   // Clamp the number of items to maxItems
   const displayItems = items.slice(0, maxItems);
 
   // Internal state: which card is focused within the swimlane
-  const [focusedIndex, setFocusedIndex] = useState(0);
+  const [uncontrolledFocusedIndex, setUncontrolledFocusedIndex] = useState(0);
+
+  // Use controlled or uncontrolled focused index
+  const focusedIndex =
+    typeof controlledFocusedIndex === 'number' ? controlledFocusedIndex : uncontrolledFocusedIndex;
 
   // Ref to the container div for key event handling
   const containerRef = useRef(null);
@@ -79,18 +86,26 @@ export default function FixedSwimlane({
     if (!focused) return;
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowRight') {
-        setFocusedIndex((prev) => {
-          const next = Math.min(prev + 1, displayItems.length - 1);
-          if (next !== prev && onFocusChange) onFocusChange(next);
-          return next;
-        });
+        if (typeof controlledFocusedIndex === 'number') {
+          onFocusChange && onFocusChange(Math.min(focusedIndex + 1, displayItems.length - 1));
+        } else {
+          setUncontrolledFocusedIndex((prev) => {
+            const next = Math.min(prev + 1, displayItems.length - 1);
+            onFocusChange && onFocusChange(next);
+            return next;
+          });
+        }
         e.preventDefault();
       } else if (e.key === 'ArrowLeft') {
-        setFocusedIndex((prev) => {
-          const next = Math.max(prev - 1, 0);
-          if (next !== prev && onFocusChange) onFocusChange(next);
-          return next;
-        });
+        if (typeof controlledFocusedIndex === 'number') {
+          onFocusChange && onFocusChange(Math.max(focusedIndex - 1, 0));
+        } else {
+          setUncontrolledFocusedIndex((prev) => {
+            const next = Math.max(prev - 1, 0);
+            onFocusChange && onFocusChange(next);
+            return next;
+          });
+        }
         e.preventDefault();
       } else if (e.key === 'Enter' || e.key === ' ') {
         if (onSelect && displayItems[focusedIndex]) {
@@ -101,13 +116,15 @@ export default function FixedSwimlane({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focused, displayItems, focusedIndex, onSelect, onFocusChange]);
+  }, [focused, displayItems, focusedIndex, onSelect, onFocusChange, controlledFocusedIndex]);
 
-  // Reset focusedIndex if items change or swimlane loses focus
+  // Reset uncontrolled focusedIndex if items change or swimlane loses focus
   useEffect(() => {
-    setFocusedIndex(0);
-    if (onFocusChange) onFocusChange(0);
-  }, [items, focused]);
+    if (typeof controlledFocusedIndex !== 'number') {
+      setUncontrolledFocusedIndex(0);
+      onFocusChange && onFocusChange(0);
+    }
+  }, [items, focused, controlledFocusedIndex, onFocusChange]);
 
   // --- Render ---
   // Viewport: clips the row, fixed width, left/right padding via CSS var

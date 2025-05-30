@@ -24,7 +24,13 @@ function Home({ onChannelSelect }) {
   const swimlaneRef = useRef(null);
 
   // Use navigation context for vertical group focus
-  const { focusedGroupIndex, moveFocusUp, moveFocusDown } = useFocusNavigation();
+  const { 
+    focusedGroupIndex, 
+    moveFocusUp, 
+    moveFocusDown, 
+    getGroupFocusMemory, 
+    setGroupFocusMemory 
+  } = useFocusNavigation();
 
   // Define group indices for up/down navigation
   const HEADER_GROUP = 0;
@@ -33,6 +39,18 @@ function Home({ onChannelSelect }) {
 
   // Track active filter for the filter swimlane
   const [activeFilterId, setActiveFilterId] = useState(fakeFilters[0]?.id);
+
+  // Get the last focused index for the swimlane group from context
+  const swimlaneMemory = getGroupFocusMemory(SWIMLANE_GROUP);
+  const [swimlaneFocusedIndex, setSwimlaneFocusedIndex] = useState(swimlaneMemory.focusedIndex);
+
+  // When the group regains focus, restore the last focused index
+  useEffect(() => {
+    if (focusedGroupIndex === SWIMLANE_GROUP) {
+      setSwimlaneFocusedIndex(swimlaneMemory.focusedIndex);
+    }
+    // eslint-disable-next-line
+  }, [focusedGroupIndex]);
 
   // Handle up/down keys to move between groups
   useEffect(() => {
@@ -155,11 +173,12 @@ function Home({ onChannelSelect }) {
           maxItems={12}
           fallbackItem={<div>No channels available</div>}
           focused={focusedGroupIndex === SWIMLANE_GROUP}
-          onSelect={onChannelSelect}
+          focusedIndex={swimlaneFocusedIndex}
           onFocusChange={(index) => {
-            /* Optional: update parent memory or analytics here */
-            // console.log('Swimlane focused card:', index);
+            setSwimlaneFocusedIndex(index);
+            setGroupFocusMemory(SWIMLANE_GROUP, { focusedIndex: index });
           }}
+          onSelect={onChannelSelect}
         />
       </div>
       {/* Ad banner is outside the navigation context and not focusable */}
