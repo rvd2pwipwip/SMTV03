@@ -3,6 +3,8 @@ import React, { useRef, useState, useLayoutEffect, useMemo } from 'react';
 /**
  * VariableSwimlane - for variable-width items (e.g., filter buttons)
  *
+ * Now supports a controlled focusedIndex prop for focus memory.
+ *
  * Features:
  * - Accepts items and renderItem
  * - Measures item widths after render
@@ -25,6 +27,7 @@ export default function VariableSwimlane({
   onFocusChange,
   viewportWidth = 1920, // default TV width
   maxContentWidthRatio = 2.5, // max content width = 2.5x viewport
+  focusedIndex: controlledFocusedIndex, // New: controlled focused index
 }) {
   // Refs for each item to measure width
   const itemRefs = useRef([]);
@@ -32,8 +35,11 @@ export default function VariableSwimlane({
   const [itemWidths, setItemWidths] = useState([]);
   // State for whether to show More item
   const [showMore, setShowMore] = useState(false);
-  // Focused index (including More item if present)
-  const [focusedIndex, setFocusedIndex] = useState(0);
+  // Internal state for focused index
+  const [uncontrolledFocusedIndex, setUncontrolledFocusedIndex] = useState(0);
+  // Use controlled or uncontrolled focused index
+  const focusedIndex =
+    typeof controlledFocusedIndex === 'number' ? controlledFocusedIndex : uncontrolledFocusedIndex;
 
   // Helper: measure widths after render
   useLayoutEffect(() => {
@@ -77,10 +83,26 @@ export default function VariableSwimlane({
     if (!focused) return;
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowRight') {
-        setFocusedIndex((prev) => Math.min(prev + 1, numItems - 1));
+        if (typeof controlledFocusedIndex === 'number') {
+          onFocusChange && onFocusChange(Math.min(focusedIndex + 1, numItems - 1));
+        } else {
+          setUncontrolledFocusedIndex((prev) => {
+            const next = Math.min(prev + 1, numItems - 1);
+            onFocusChange && onFocusChange(next);
+            return next;
+          });
+        }
         e.preventDefault();
       } else if (e.key === 'ArrowLeft') {
-        setFocusedIndex((prev) => Math.max(prev - 1, 0));
+        if (typeof controlledFocusedIndex === 'number') {
+          onFocusChange && onFocusChange(Math.max(focusedIndex - 1, 0));
+        } else {
+          setUncontrolledFocusedIndex((prev) => {
+            const next = Math.max(prev - 1, 0);
+            onFocusChange && onFocusChange(next);
+            return next;
+          });
+        }
         e.preventDefault();
       } else if (e.key === 'Enter' || e.key === ' ') {
         if (focusedIndex < items.length) {
@@ -93,13 +115,15 @@ export default function VariableSwimlane({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focused, focusedIndex, items, showMore, onSelect, numItems]);
+  }, [focused, focusedIndex, items, showMore, onSelect, numItems, onFocusChange, controlledFocusedIndex]);
 
-  // Reset focus when items or focus state changes
+  // Reset uncontrolled focusedIndex if items or focus state changes
   React.useEffect(() => {
-    setFocusedIndex(0);
-    onFocusChange && onFocusChange(0);
-  }, [items, focused, onFocusChange]);
+    if (typeof controlledFocusedIndex !== 'number') {
+      setUncontrolledFocusedIndex(0);
+      onFocusChange && onFocusChange(0);
+    }
+  }, [items, focused, controlledFocusedIndex, onFocusChange]);
 
   // Render
   return (

@@ -40,6 +40,18 @@ function Home({ onChannelSelect }) {
   // Track active filter for the filter swimlane
   const [activeFilterId, setActiveFilterId] = useState(fakeFilters[0]?.id);
 
+  // Get the last focused index for the filter group from context
+  const filtersMemory = getGroupFocusMemory(FILTERS_GROUP);
+  const [filtersFocusedIndex, setFiltersFocusedIndex] = useState(filtersMemory.focusedIndex);
+
+  // When the group regains focus, restore the last focused index
+  useEffect(() => {
+    if (focusedGroupIndex === FILTERS_GROUP) {
+      setFiltersFocusedIndex(filtersMemory.focusedIndex);
+    }
+    // eslint-disable-next-line
+  }, [focusedGroupIndex]);
+
   // Get the last focused index for the swimlane group from context
   const swimlaneMemory = getGroupFocusMemory(SWIMLANE_GROUP);
   const [swimlaneFocusedIndex, setSwimlaneFocusedIndex] = useState(swimlaneMemory.focusedIndex);
@@ -153,9 +165,11 @@ function Home({ onChannelSelect }) {
             </Button>
           )}
           focused={focusedGroupIndex === FILTERS_GROUP}
+          focusedIndex={filtersFocusedIndex}
           onSelect={(filter) => setActiveFilterId(filter.id)}
           onFocusChange={(index) => {
-            // Optional: handle focus memory/analytics
+            setFiltersFocusedIndex(index);
+            setGroupFocusMemory(FILTERS_GROUP, { focusedIndex: index });
           }}
         />
 
