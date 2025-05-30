@@ -79,6 +79,31 @@ function Home({ onChannelSelect }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [moveFocusUp, moveFocusDown]);
 
+  // Get the last focused index for the header group from context
+  const headerMemory = getGroupFocusMemory(HEADER_GROUP);
+  const [headerFocusedIndex, setHeaderFocusedIndex] = useState(headerMemory.focusedIndex ?? 0);
+  const [hasVisitedHeader, setHasVisitedHeader] = useState(false);
+
+  // When the header group regains focus, focus first child on first visit, else use memory
+  useEffect(() => {
+    if (focusedGroupIndex === HEADER_GROUP) {
+      if (!hasVisitedHeader) {
+        // First time: focus first child
+        searchRef.current?.focus();
+        setHeaderFocusedIndex(0);
+        setGroupFocusMemory(HEADER_GROUP, { focusedIndex: 0 });
+        setHasVisitedHeader(true);
+      } else {
+        // Subsequent times: focus last focused child
+        if (headerFocusedIndex === 0) {
+          searchRef.current?.focus();
+        } else if (headerFocusedIndex === 1) {
+          infoRef.current?.focus();
+        }
+      }
+    }
+  }, [focusedGroupIndex, hasVisitedHeader, headerFocusedIndex, setGroupFocusMemory]);
+
   // Example click handler
   const handleCardClick = (channelData) => {
     onChannelSelect(channelData);
@@ -130,8 +155,11 @@ function Home({ onChannelSelect }) {
               size="medium"
               variant="transparent"
               aria-label="Search"
-              // Pass focused to header actions if needed
-              focused={focusedGroupIndex === HEADER_GROUP}
+              focused={focusedGroupIndex === HEADER_GROUP && headerFocusedIndex === 0}
+              onFocus={() => {
+                setHeaderFocusedIndex(0);
+                setGroupFocusMemory(HEADER_GROUP, { focusedIndex: 0 });
+              }}
             />
             <Button
               ref={infoRef}
@@ -141,7 +169,11 @@ function Home({ onChannelSelect }) {
               size="medium"
               variant="transparent"
               aria-label="Info"
-              focused={focusedGroupIndex === HEADER_GROUP}
+              focused={focusedGroupIndex === HEADER_GROUP && headerFocusedIndex === 1}
+              onFocus={() => {
+                setHeaderFocusedIndex(1);
+                setGroupFocusMemory(HEADER_GROUP, { focusedIndex: 1 });
+              }}
             />
           </div>
         </div>
