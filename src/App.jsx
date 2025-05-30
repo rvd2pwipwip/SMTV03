@@ -90,10 +90,9 @@ function AppContent() {
 }
 
 function App() {
-  // For now, Home has 3 groups (header, filters, swimlane)
-  // In the future, groupCount can be dynamic per screen
+  // Home: header=0, filters=1, swimlane=2
   return (
-    <FocusNavigationProvider groupCount={3}>
+    <FocusNavigationProvider groupCount={3} initialGroupIndex={2}>
       <AppContent />
     </FocusNavigationProvider>
   );

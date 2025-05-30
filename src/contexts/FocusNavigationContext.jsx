@@ -17,9 +17,9 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
  */
 const FocusNavigationContext = createContext();
 
-export function FocusNavigationProvider({ groupCount = 3, children }) {
+export function FocusNavigationProvider({ groupCount = 3, initialGroupIndex = 0, children }) {
   // Which group is currently focused (0 = header, 1 = filters, 2 = swimlane, ...)
-  const [focusedGroupIndex, setFocusedGroupIndex] = useState(0);
+  const [focusedGroupIndex, setFocusedGroupIndex] = useState(initialGroupIndex);
 
   // Move focus up (to previous group)
   const moveFocusUp = useCallback(() => {
