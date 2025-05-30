@@ -2,28 +2,12 @@ import React, { useState, useEffect } from 'react';
 import Home from './screens/Home';
 import ChannelInfo from './screens/ChannelInfo';
 import Player from './screens/Player';
-import { FocusMemoryProvider, useFocusMemory } from './contexts/FocusMemoryContext';
-import { FocusProvider, useFocusContext } from './contexts/FocusContext';
 import './styles/App.css';
-
-// GlobalKeyHandler handles up/down keys using FocusContext
-function GlobalKeyHandler({ groupCount }) {
-  const { moveVertical } = useFocusContext();
-  React.useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'ArrowUp') moveVertical('up');
-      if (e.key === 'ArrowDown') moveVertical('down');
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [moveVertical]);
-  return null;
-}
+import { FocusNavigationProvider } from './contexts/FocusNavigationContext';
 
 function AppContent() {
   const [screenStack, setScreenStack] = useState(['home']);
   const [selectedChannel, setSelectedChannel] = useState(null);
-  const { saveFocus, restoreFocus, updateCurrentScreen } = useFocusMemory();
 
   // Screen navigation functions
   const pushScreen = (screen, data = null) => {
@@ -80,16 +64,12 @@ function AppContent() {
 
   // Get current screen
   const currentScreen = screenStack[screenStack.length - 1];
-  // Get focusedGroupIndex from context
-  const { focusedGroupIndex } = useFocusContext();
 
   return (
     <div className="app">
-      <GlobalKeyHandler groupCount={groupCount} />
       {currentScreen === 'home' && (
         <Home 
           onChannelSelect={(channel) => { pushScreen('channelInfo', channel); }}
-          focusedGroupIndex={focusedGroupIndex}
         />
       )}
       {currentScreen === 'channelInfo' && (
@@ -110,12 +90,12 @@ function AppContent() {
 }
 
 function App() {
+  // For now, Home has 3 groups (header, filters, swimlane)
+  // In the future, groupCount can be dynamic per screen
   return (
-    <FocusProvider groupCount={3}>
-      <FocusMemoryProvider>
-        <AppContent />
-      </FocusMemoryProvider>
-    </FocusProvider>
+    <FocusNavigationProvider groupCount={3}>
+      <AppContent />
+    </FocusNavigationProvider>
   );
 }
 

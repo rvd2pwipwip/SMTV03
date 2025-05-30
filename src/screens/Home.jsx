@@ -3,7 +3,6 @@ import KeyboardWrapper from '../components/KeyboardWrapper';
 import { ChannelCard, Button } from '@smtv/tv-component-library';
 import '@smtv/tv-component-library/dist/style.css';
 import '../styles/App.css';
-import { useFocusMemory } from '../contexts/FocusMemoryContext';
 import AdBanner from '../components/AdBanner';
 import { MagnifyingGlass, Info } from 'stingray-icons';
 import stingrayMusicLogo from '../assets/svg/stingrayMusic.svg';
@@ -13,6 +12,7 @@ import FixedSwimlane from '../components/FixedSwimlane';
 import { fakeChannels } from '../data/fakeChannels';
 import VariableSwimlane from '../components/VariableSwimlane';
 import { fakeFilters } from '../data/fakeFilters';
+import { useFocusNavigation } from '../contexts/FocusNavigationContext';
 
 function Home({ onChannelSelect }) {
   // Use plain refs for each card
@@ -23,55 +23,36 @@ function Home({ onChannelSelect }) {
   const slidingSwimlaneRef = useRef(null);
   const swimlaneRef = useRef(null);
 
+  // Use navigation context for vertical group focus
+  const { focusedGroupIndex, moveFocusUp, moveFocusDown } = useFocusNavigation();
+
   // Define group indices for up/down navigation
   const HEADER_GROUP = 0;
   const FILTERS_GROUP = 1;
   const SWIMLANE_GROUP = 2;
 
-  // TEMP: Local focus group state for standalone testing
-  const [focusedGroupIndex, setFocusedGroupIndex] = useState(SWIMLANE_GROUP); // Swimlane focused by default
-
   // Track active filter for the filter swimlane
   const [activeFilterId, setActiveFilterId] = useState(fakeFilters[0]?.id);
 
-  // ---
-  // Legacy swimlane navigation logic (kept for reference):
-  // This logic handled left/right navigation and focus for the old swimlane implementation.
-  // It is commented out so it does not interfere with the new GenericSwimlane,
-  // but is kept here as a reference for offset/parking behavior.
-  // ---
-  // const cardRefs = Array.from({ length: 12 }, () => useRef(null));
-  // const [focusedCard, setFocusedCard] = useState(0);
-  // useEffect(() => {
-  //   const handleKeyDown = (e) => {
-  //     if (e.key === 'ArrowRight') {
-  //       setFocusedCard((prev) => {
-  //         const next = Math.min(prev + 1, cardRefs.length - 1);
-  //         return next;
-  //       });
-  //     } else if (e.key === 'ArrowLeft') {
-  //       setFocusedCard((prev) => {
-  //         const next = Math.max(prev - 1, 0);
-  //         return next;
-  //       });
-  //     }
-  //   };
-  //   window.addEventListener('keydown', handleKeyDown);
-  //   return () => window.removeEventListener('keydown', handleKeyDown);
-  // }, [cardRefs.length]);
-  // useEffect(() => {
-  //   const ref = cardRefs[focusedCard];
-  //   if (ref && ref.current) {
-  //     ref.current.focus();
-  //   }
-  // }, [focusedCard, cardRefs]);
+  // Handle up/down keys to move between groups
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowDown') {
+        moveFocusDown();
+        e.preventDefault();
+      } else if (e.key === 'ArrowUp') {
+        moveFocusUp();
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [moveFocusUp, moveFocusDown]);
 
   // Example click handler
   const handleCardClick = (channelData) => {
     onChannelSelect(channelData);
   };
-
-
 
   return (
     <div
@@ -98,6 +79,8 @@ function Home({ onChannelSelect }) {
         style={{
           display: 'flex',
           flexDirection: 'column',
+          // Use design token for vertical gap between main sections
+          gap: 'var(--spacing-xxl)',
           height: 'calc(100vh - 150px)',
           width: '100%',
           justifyContent: 'flex-start',
@@ -117,6 +100,8 @@ function Home({ onChannelSelect }) {
               size="medium"
               variant="transparent"
               aria-label="Search"
+              // Pass focused to header actions if needed
+              focused={focusedGroupIndex === HEADER_GROUP}
             />
             <Button
               ref={infoRef}
@@ -126,11 +111,12 @@ function Home({ onChannelSelect }) {
               size="medium"
               variant="transparent"
               aria-label="Info"
+              focused={focusedGroupIndex === HEADER_GROUP}
             />
           </div>
         </div>
         {/*
-          Replacing the old home-filters div with VariableSwimlane for filter buttons.
+          VariableSwimlane for filter buttons.
           - Uses Button.tsx (medium, secondary for all except active, which is medium primary)
           - Focus ring is handled by Button component
         */}
@@ -148,8 +134,7 @@ function Home({ onChannelSelect }) {
               {filter.label}
             </Button>
           )}
-          // For now, always focused; later, use focusedGroupIndex === FILTERS_GROUP
-          focused={true}
+          focused={focusedGroupIndex === FILTERS_GROUP}
           onSelect={(filter) => setActiveFilterId(filter.id)}
           onFocusChange={(index) => {
             // Optional: handle focus memory/analytics
@@ -169,9 +154,8 @@ function Home({ onChannelSelect }) {
           )}
           maxItems={12}
           fallbackItem={<div>No channels available</div>}
-          // New props for navigation/focus
-          focused={focusedGroupIndex === SWIMLANE_GROUP} // Only handle keys when swimlane is focused
-          onSelect={onChannelSelect} // Called when Enter/OK is pressed on a card
+          focused={focusedGroupIndex === SWIMLANE_GROUP}
+          onSelect={onChannelSelect}
           onFocusChange={(index) => {
             /* Optional: update parent memory or analytics here */
             // console.log('Swimlane focused card:', index);
