@@ -11,19 +11,8 @@ function AppContent() {
 
   // Screen navigation functions
   const pushScreen = (screen, data = null) => {
-    // Save focus before leaving current screen
-    const currentScreen = screenStack[screenStack.length - 1];
-    const focusedElement = document.querySelector('[data-focus-key]:focus');
-    if (focusedElement) {
-      const stableId = focusedElement.getAttribute('data-stable-id');
-      if (stableId) {
-        saveFocus(currentScreen, stableId);
-      }
-    }
-
     setScreenStack([...screenStack, screen]);
     if (data) setSelectedChannel(data);
-    updateCurrentScreen(screen);
   };
 
   const popScreen = () => {
@@ -31,19 +20,6 @@ function AppContent() {
     const previousScreen = screenStack[screenStack.length - 2];
     if (previousScreen === 'home') {
       setSelectedChannel(null);
-    }
-    updateCurrentScreen(previousScreen);
-    
-    // Restore focus on the previous screen
-    const stableId = restoreFocus(previousScreen);
-    if (stableId) {
-      const element = document.querySelector(`[data-stable-id="${stableId}"]`);
-      if (element) {
-        const focusKey = element.getAttribute('data-focus-key');
-        if (focusKey) {
-          setFocus(focusKey);
-        }
-      }
     }
   };
 
