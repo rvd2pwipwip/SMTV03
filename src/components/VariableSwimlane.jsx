@@ -66,12 +66,12 @@ export default function VariableSwimlane({
   const numItems = items.length + (showMore ? 1 : 0);
 
   // Offset/parking logic: scroll so focused item is visible, park last item
-  // For simplicity, offset is sum of widths of items before focusedIndex
+  const GAP = 30;
   const offset = useMemo(() => {
+    // Sum widths and gaps of all items before the focused one
     let sum = 0;
     for (let i = 0; i < focusedIndex; i++) {
-      sum += itemWidths[i] || 0;
-      if (i > 0) sum += 30; // gap
+      sum += (itemWidths[i] || 0) + GAP;
     }
     // Clamp so last item parks at right edge
     const maxOffset = Math.max(0, totalContentWidth - viewportWidth);
