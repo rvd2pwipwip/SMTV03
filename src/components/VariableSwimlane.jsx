@@ -1,6 +1,19 @@
 import React, { useRef, useState, useLayoutEffect, useMemo } from 'react';
 
 /**
+ * Helper to get the value of --spacing-xl from CSS, with fallback to 32
+ */
+function getGap() {
+  if (typeof window !== 'undefined') {
+    const root = document.documentElement;
+    const value = getComputedStyle(root).getPropertyValue('--spacing-xl');
+    const parsed = parseInt(value, 10);
+    return isNaN(parsed) ? 32 : parsed;
+  }
+  return 32;
+}
+
+/**
  * VariableSwimlane - for variable-width items (e.g., filter buttons)
  *
  * Now supports a controlled focusedIndex prop for focus memory.
@@ -66,18 +79,19 @@ export default function VariableSwimlane({
   const numItems = items.length + (showMore ? 1 : 0);
 
   /**
-   * Helper to get the value of --spacing-xl from CSS, with fallback to 32
+   * Helper to get the value of --screen-side-padding from CSS, with fallback to 100
    */
-  function getGap() {
+  function getSidePadding() {
     if (typeof window !== 'undefined') {
       const root = document.documentElement;
-      const value = getComputedStyle(root).getPropertyValue('--spacing-xl');
+      const value = getComputedStyle(root).getPropertyValue('--screen-side-padding');
       const parsed = parseInt(value, 10);
-      return isNaN(parsed) ? 32 : parsed;
+      return isNaN(parsed) ? 100 : parsed;
     }
-    return 32;
+    return 100;
   }
 
+  const sidePadding = getSidePadding(); // Use design token for safe zone
   const GAP = getGap(); // Use design token for gap
   const offset = useMemo(() => {
     // Sum widths and gaps of all items before the focused one
@@ -85,10 +99,12 @@ export default function VariableSwimlane({
     for (let i = 0; i < focusedIndex; i++) {
       sum += (itemWidths[i] || 0) + GAP;
     }
-    // Clamp so last item parks at right edge
-    const maxOffset = Math.max(0, totalContentWidth - viewportWidth);
+    // Clamp so row's right edge parks at the inner edge of the right padding
+    // GAP/2 is added because in a flex row with gaps, the last item's right edge is half a gap away from the true end of the row.
+    // This ensures the row's right edge aligns perfectly with the right padding, matching FixedSwimlane and TV-native parking behavior.
+    const maxOffset = Math.max(0, totalContentWidth - viewportWidth + 2 * sidePadding + GAP / 2);
     return Math.min(sum, maxOffset);
-  }, [focusedIndex, itemWidths, totalContentWidth, viewportWidth, GAP]);
+  }, [focusedIndex, itemWidths, totalContentWidth, viewportWidth, GAP, sidePadding]);
 
   // Keyboard navigation
   React.useEffect(() => {
@@ -141,7 +157,7 @@ export default function VariableSwimlane({
   return (
     <div
       className={`variable-swimlane-viewport ${className}`}
-      style={{ width: viewportWidth, overflow: 'visible', display: 'flex', alignItems: 'center', padding: '0 var(--screen-side-padding, 100px)' }}
+      style={{ width: viewportWidth, overflow: 'visible', display: 'flex', alignItems: 'center', paddingLeft: 'var(--screen-side-padding, 100px)', paddingRight: 'var(--screen-side-padding, 100px)' }}
       tabIndex={-1}
       aria-label="Variable Swimlane viewport"
       role="region"
