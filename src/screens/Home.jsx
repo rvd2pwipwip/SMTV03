@@ -21,9 +21,6 @@ function Home({ onChannelSelect }) {
   const cardRefs = Array.from({ length: 12 }, () => useRef(null));
   const searchRef = useRef(null);
   const infoRef = useRef(null);
-  const testButtonRef = useRef(null);
-  const slidingSwimlaneRef = useRef(null);
-  const swimlaneRef = useRef(null);
 
   // Use navigation context for vertical group focus
   const { 
@@ -105,6 +102,46 @@ function Home({ onChannelSelect }) {
       }
     }
   }, [focusedGroupIndex, hasVisitedHeader, headerFocusedIndex, setGroupFocusMemory]);
+
+  // Blur header buttons when leaving header group to remove focus ring
+  useEffect(() => {
+    if (focusedGroupIndex !== HEADER_GROUP) {
+      searchRef.current?.blur();
+      infoRef.current?.blur();
+    }
+  }, [focusedGroupIndex]);
+
+  // Header action buttons horizontal navigation
+  useEffect(() => {
+    if (focusedGroupIndex !== HEADER_GROUP) return;
+  
+    const handleHeaderKeyDown = (e) => {
+      if (e.key === 'ArrowRight' && headerFocusedIndex === 0) {
+        setHeaderFocusedIndex(1);
+        setGroupFocusMemory(HEADER_GROUP, { focusedIndex: 1 });
+        infoRef.current?.focus();
+        e.preventDefault();
+      } else if (e.key === 'ArrowLeft' && headerFocusedIndex === 1) {
+        setHeaderFocusedIndex(0);
+        setGroupFocusMemory(HEADER_GROUP, { focusedIndex: 0 });
+        searchRef.current?.focus();
+        e.preventDefault();
+      } else if (e.key === 'Enter' && headerFocusedIndex === 0) {
+        console.log('Enter key pressed on search button');
+        setGroupFocusMemory(HEADER_GROUP, { focusedIndex: 0 });
+        // TODO: Implement search screen navigation
+        e.preventDefault();
+      } else if (e.key === 'Enter' && headerFocusedIndex === 1) {
+        console.log('Enter key pressed on info button');
+        setGroupFocusMemory(HEADER_GROUP, { focusedIndex: 1 });
+        // TODO: Implement info screen navigation
+        e.preventDefault();
+      }
+    };
+  
+    window.addEventListener('keydown', handleHeaderKeyDown);
+    return () => window.removeEventListener('keydown', handleHeaderKeyDown);
+  }, [focusedGroupIndex, headerFocusedIndex, setGroupFocusMemory]);
 
   // Get side padding value for swimlanes
   const sidePadding = getSidePadding();
