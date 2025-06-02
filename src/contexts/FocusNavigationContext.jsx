@@ -7,7 +7,8 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
  * - focusedGroupIndex: which vertical group is focused (header, filters, swimlane, etc)
  * - setFocusedGroupIndex: set focus programmatically
  * - moveFocusUp / moveFocusDown: move focus between groups
- * - groupCount: total number of vertical groups
+ * - groupCount: total number of vertical groups (dynamic, can be set per screen)
+ * - setGroupCount: update group count dynamically
  * - focusMemory: remembers focusedIndex and offset for each group
  * - setGroupFocusMemory: update memory for a group
  * - getGroupFocusMemory: get memory for a group
@@ -15,15 +16,19 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
  * Usage:
  * - Wrap your app (or main content) in <FocusNavigationProvider groupCount={3}>
  * - Use useFocusNavigation() in screens/components
+ * - On each screen, call setGroupCount(N) in a useEffect to set the number of vertical groups
  * - Pass focused={focusedGroupIndex === ...} to each group
  * - Call moveFocusUp/moveFocusDown on up/down key events
  * - Use setGroupFocusMemory/getGroupFocusMemory for per-group focus/offset memory
  */
 const FocusNavigationContext = createContext();
 
-export function FocusNavigationProvider({ groupCount = 3, initialGroupIndex = 0, children }) {
+export function FocusNavigationProvider({ groupCount: initialGroupCount = 3, initialGroupIndex = 0, children }) {
   // Which group is currently focused (0 = header, 1 = filters, 2 = swimlane, ...)
   const [focusedGroupIndex, setFocusedGroupIndex] = useState(initialGroupIndex);
+
+  // Dynamic group count (can be set per screen)
+  const [groupCount, setGroupCount] = useState(initialGroupCount);
 
   // Per-group focus memory: { [groupIndex]: { focusedIndex, offset } }
   const [focusMemory, setFocusMemory] = useState({});
@@ -55,6 +60,7 @@ export function FocusNavigationProvider({ groupCount = 3, initialGroupIndex = 0,
     moveFocusUp,
     moveFocusDown,
     groupCount,
+    setGroupCount,
     focusMemory,
     setGroupFocusMemory,
     getGroupFocusMemory,

@@ -23,6 +23,11 @@ function ChannelInfo({ channel, onPlay }) {
   const relatedCard4Ref = useRef(null);
   const relatedCard5Ref = useRef(null);
 
+  // Define group indices for up/down navigation
+  const ACTION_GROUP = 0;
+  const FILTERS_GROUP = 1;
+  const RELATED_GROUP = 2;
+
   // Action swimlane state
   const actionItems = [
     {
@@ -148,7 +153,7 @@ function ChannelInfo({ channel, onPlay }) {
           boxSizing: 'border-box', 
           paddingLeft: 0, 
           paddingRight: 0, 
-          marginTop: 90,
+          marginTop: 'var(--spacing-xxl)',
           display: 'flex',
           flexDirection: 'column',
           gap: 'var(--spacing-s12)', }}>
