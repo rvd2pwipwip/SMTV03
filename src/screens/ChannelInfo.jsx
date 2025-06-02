@@ -13,6 +13,7 @@ function ChannelInfo({ channel, onPlay }) {
   // Use navigation context for vertical group focus
   const {
     focusedGroupIndex,
+    setFocusedGroupIndex,
     moveFocusUp,
     moveFocusDown,
     getGroupFocusMemory,
@@ -142,6 +143,13 @@ function ChannelInfo({ channel, onPlay }) {
   useEffect(() => {
     setGroupCount(groups.length);
   }, [setGroupCount, groups.length]);
+
+  // Ensure initial focus is always on Play button when screen mounts
+  useEffect(() => {
+    setFocusedGroupIndex(0); // Focus the actions group
+    setActionFocusedIndex(0); // Focus the Play button
+    setGroupFocusMemory(0, { focusedIndex: 0 });
+  }, [setFocusedGroupIndex, setActionFocusedIndex, setGroupFocusMemory]);
 
   // When a group regains focus, restore the last focused index
   useEffect(() => {
