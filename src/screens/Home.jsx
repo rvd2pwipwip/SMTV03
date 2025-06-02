@@ -11,7 +11,8 @@ import ChannelInfo from './ChannelInfo';
 import FixedSwimlane from '../components/FixedSwimlane';
 import { fakeChannels } from '../data/fakeChannels';
 import VariableSwimlane from '../components/VariableSwimlane';
-import { fakeFilters } from '../data/fakeFilters';
+import { genreFilters } from '../data/genreFilters';
+import { homeFilters } from '../data/homeFilters';
 import { useFocusNavigation } from '../contexts/FocusNavigationContext';
 import { getSidePadding } from '../utils/ui';
 
@@ -39,7 +40,7 @@ function Home({ onChannelSelect }) {
   const SWIMLANE_GROUP = 2;
 
   // Track active filter for the filter swimlane
-  const [activeFilterId, setActiveFilterId] = useState(fakeFilters[0]?.id);
+  const [activeFilterId, setActiveFilterId] = useState(homeFilters[0]?.id);
 
   // Get the last focused index for the filter group from context
   const filtersMemory = getGroupFocusMemory(FILTERS_GROUP);
@@ -187,7 +188,7 @@ function Home({ onChannelSelect }) {
           - Focus ring is handled by Button component
         */}
         <VariableSwimlane
-          items={fakeFilters}
+          items={homeFilters}
           renderItem={(filter, i, focused) => (
             <Button
               key={filter.id}
