@@ -1,4 +1,5 @@
 import React from 'react';
+import { AD_BANNER_HEIGHT } from '../utils/ui';
 
 /**
  * AdBanner must be placed inside a parent with position: relative and size 1920x1080 (the .app div)
@@ -12,7 +13,7 @@ const AdBanner = ({ children }) => {
         left: 0,
         bottom: 0,
         width: '100%',
-        height: 150,
+        height: AD_BANNER_HEIGHT,
         background: '#888',
         display: 'flex',
         alignItems: 'center',

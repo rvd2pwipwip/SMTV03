@@ -1,6 +1,11 @@
 // Utility functions for UI/layout
 
 /**
+ * Global constant for ad banner height (in px)
+ */
+export const AD_BANNER_HEIGHT = 150;
+
+/**
  * getSidePadding
  *
  * Returns the value of the CSS custom property --screen-side-padding as an integer (pixels).

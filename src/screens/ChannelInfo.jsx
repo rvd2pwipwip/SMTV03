@@ -8,6 +8,16 @@ import AdBanner from '../components/AdBanner';
 import VariableSwimlane from '../components/VariableSwimlane';
 import { channelInfoFilters } from '../data/channelInfoFilters';
 import { useFocusNavigation } from '../contexts/FocusNavigationContext';
+import VerticalScrollPadding from '../components/VerticalScrollPadding';
+
+function getSpacingXXL() {
+  if (typeof window !== 'undefined') {
+    const value = getComputedStyle(document.documentElement).getPropertyValue('--spacing-xxl');
+    const parsed = parseInt(value, 10);
+    return isNaN(parsed) ? 64 : parsed;
+  }
+  return 64;
+}
 
 function ChannelInfo({ channel, onPlay }) {
   // Use navigation context for vertical group focus
@@ -41,6 +51,26 @@ function ChannelInfo({ channel, onPlay }) {
   const [actionFocusedIndex, setActionFocusedIndex] = useState(getGroupFocusMemory(0).focusedIndex ?? 0);
   const [filtersFocusedIndex, setFiltersFocusedIndex] = useState(getGroupFocusMemory(1).focusedIndex ?? 0);
   const [relatedFocusedIndex, setRelatedFocusedIndex] = useState(getGroupFocusMemory(2).focusedIndex ?? 0);
+
+  // Refs for scrolling and measuring
+  const scrollContainerRef = useRef(null);
+  const relatedGroupRef = useRef(null);
+  const adBannerRef = useRef(null);
+  const [adBannerHeight, setAdBannerHeight] = useState(0);
+  const [spacingXXL, setSpacingXXL] = useState(getSpacingXXL());
+
+  // Measure Ad Banner height and spacingXXL on mount and resize
+  useEffect(() => {
+    function measure() {
+      if (adBannerRef.current) {
+        setAdBannerHeight(adBannerRef.current.getBoundingClientRect().height);
+      }
+      setSpacingXXL(getSpacingXXL());
+    }
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
 
   // Set group count dynamically
   const groups = [
@@ -93,15 +123,17 @@ function ChannelInfo({ channel, onPlay }) {
     {
       type: 'related',
       render: () => (
-        <div style={{ 
-          width: '100%', 
-          boxSizing: 'border-box', 
-          paddingLeft: 0, 
-          paddingRight: 0, 
-          marginTop: 'var(--spacing-xxl)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 'var(--spacing-s12)', }}>
+        <div
+          ref={relatedGroupRef}
+          style={{ 
+            width: '100%', 
+            boxSizing: 'border-box', 
+            paddingLeft: 0, 
+            paddingRight: 0, 
+            marginTop: 'var(--spacing-xxl)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--spacing-s12)', }}>
           <div
             style={{
               fontFamily: 'var(--font-family-secondary)',
@@ -177,17 +209,46 @@ function ChannelInfo({ channel, onPlay }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [moveFocusUp, moveFocusDown]);
 
+  // Scroll related group into view with correct offset when focused
+  useEffect(() => {
+    if (
+      focusedGroupIndex === 2 &&
+      relatedGroupRef.current &&
+      scrollContainerRef.current &&
+      adBannerHeight > 0 &&
+      spacingXXL > 0
+    ) {
+      const relatedRect = relatedGroupRef.current.getBoundingClientRect();
+      const containerRect = scrollContainerRef.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const desiredBottom = windowHeight - (2 * adBannerHeight + spacingXXL);
+      const scrollDelta = relatedRect.bottom - desiredBottom;
+      // Only scroll if the bottom is below the desired position
+      if (scrollDelta > 0) {
+        scrollContainerRef.current.scrollBy({ top: scrollDelta, behavior: 'smooth' });
+      }
+    }
+  }, [focusedGroupIndex, adBannerHeight, spacingXXL]);
+
   return (
     <>
-      <div style={{ 
-        width: '100%', 
-        boxSizing: 'border-box', 
-        padding: 'var(--screen-side-padding) var(--screen-side-padding)', 
-        display: 'flex', 
-        flexDirection: 'column', 
-        gap: 15, 
-        position: 'relative' 
-      }}>
+      <div
+        ref={scrollContainerRef}
+        style={{ 
+          width: '100%', 
+          boxSizing: 'border-box', 
+          padding: 'var(--screen-side-padding) var(--screen-side-padding)', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: 15, 
+          position: 'relative',
+          overflowY: 'auto',
+          maxHeight: `calc(100vh - ${adBannerHeight}px)`,
+          scrollbarWidth: 'none', // Firefox
+          msOverflowStyle: 'none', // IE/Edge
+        }}
+        className="channelinfo-scroll-container"
+      >
         <div style={{ display: 'flex', flexDirection: 'row', gap: 40, width: '100%', boxSizing: 'border-box', paddingLeft: 0, paddingRight: 0 }}>
           {/* Channel Thumbnail Placeholder */}
           <div
@@ -245,10 +306,17 @@ function ChannelInfo({ channel, onPlay }) {
         
         {/* Render groups[2] (related) */}
         {groups[2].render()}
+        {/* Add vertical scroll padding for overlays */}
+        {spacingXXL > 0 && <VerticalScrollPadding spacingXXL={spacingXXL} />}
       </div>
-      <AdBanner />
+      <AdBanner ref={adBannerRef} />
     </>
   );
 }
+
+// Hide scroll bar for the scroll container
+// Add this CSS to your global styles or in a CSS module:
+// .channelinfo-scroll-container::-webkit-scrollbar { display: none; }
+// .channelinfo-scroll-container { scrollbar-width: none; -ms-overflow-style: none; }
 
 export default ChannelInfo;
