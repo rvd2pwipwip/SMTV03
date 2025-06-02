@@ -1,16 +1,15 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ChannelCard, Button } from '@smtv/tv-component-library';
 import '../styles/App.css';
 import ChannelRow from '../components/ChannelRow';
 import KeyboardWrapper from '../components/KeyboardWrapper';
 import { Like, SingNow } from 'stingray-icons';
 import AdBanner from '../components/AdBanner';
+import VariableSwimlane from '../components/VariableSwimlane';
+import { channelInfoFilters } from '../data/channelInfoFilters';
 
-function ChannelInfo({ channel, onBack, onPlay }) {
+function ChannelInfo({ channel, onPlay }) {
   // Use plain refs for focusable elements
-  const actionGroupRef = useRef(null);
-  const playRef = useRef(null);
-  const favRef = useRef(null);
   const filterGroupRef = useRef(null);
   const allRef = useRef(null);
   const popularRef = useRef(null);
@@ -24,13 +23,28 @@ function ChannelInfo({ channel, onBack, onPlay }) {
   const relatedCard4Ref = useRef(null);
   const relatedCard5Ref = useRef(null);
 
+  // Action swimlane state
+  const actionItems = [
+    {
+      id: 'play',
+      label: 'Play',
+      icon: <SingNow />,
+      onClick: onPlay,
+      variant: 'primary',
+    },
+    {
+      id: 'fav',
+      label: 'Add to Favorites',
+      icon: <Like />,
+      onClick: () => {},
+      variant: 'secondary',
+    },
+  ];
+  const [actionFocusedIndex, setActionFocusedIndex] = useState(0);
+
   // Set initial focus to Play button on mount (optional, for keyboard users)
   useEffect(() => {
-    if (playRef && playRef.current) {
-      setTimeout(() => {
-        playRef.current.focus();
-      }, 0);
-    }
+    setActionFocusedIndex(0);
   }, []);
 
   const handleChannelSelect = () => {
@@ -83,40 +97,28 @@ function ChannelInfo({ channel, onBack, onPlay }) {
               {channel?.title || "Sample Channel Title"}
             </h1>
             
-            {/* Action Buttons */}
-            <div 
-              ref={actionGroupRef}
-              style={{ display: 'flex', gap: 24 }}
-            >
-              <KeyboardWrapper
-                ref={playRef}
-                data-stable-id="channelinfo-action-play"
-                onSelect={onPlay}
-              >
+            {/* Action Buttons as VariableSwimlane */}
+            <VariableSwimlane
+              items={actionItems}
+              focused={true}
+              focusedIndex={actionFocusedIndex}
+              onFocusChange={setActionFocusedIndex}
+              onSelect={(item) => item.onClick && item.onClick()}
+              renderItem={(item, i, focused) => (
                 <Button
-                  icon={<SingNow />}
+                  key={item.id}
+                  icon={item.icon}
                   showIcon
                   size="medium"
-                  variant="primary"
-                  onClick={onPlay}
+                  variant={item.variant}
+                  focused={focused}
+                  onClick={item.onClick}
                 >
-                  Play
+                  {item.label}
                 </Button>
-              </KeyboardWrapper>
-              <KeyboardWrapper
-                ref={favRef}
-                data-stable-id="channelinfo-action-fav"
-              >
-                <Button
-                  icon={<Like />}
-                  showIcon
-                  size="medium"
-                  variant="secondary"
-                >
-                  Add to Favorites
-                </Button>
-              </KeyboardWrapper>
-            </div>
+              )}
+              style={{ marginBottom: 0 }}
+            />
             
             {/* Channel Description */}
             <div
@@ -124,53 +126,32 @@ function ChannelInfo({ channel, onBack, onPlay }) {
                 fontFamily: 'var(--font-family-primary)',
                 fontSize: 'var(--font-size-body)',
                 color: 'var(--color-text-secondary)',
-                maxWidth: 700,
+                maxWidth: '60ch',
               }}
             >
               {channel?.description || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque euismod, urna eu tincidunt consectetur, nisi nisl aliquam nunc, eget aliquam massa nisl quis neque."}
             </div>
             
             {/* Filter Buttons */}
-            <div
-              ref={filterGroupRef}
-              style={{ display: 'flex', gap: 16 }}
-            >
-              <KeyboardWrapper
-                ref={allRef}
-                data-stable-id="channelinfo-filter-all"
-              >
-                <Button variant="secondary">All</Button>
-              </KeyboardWrapper>
-              <KeyboardWrapper
-                ref={popularRef}
-                data-stable-id="channelinfo-filter-popular"
-              >
-                <Button variant="secondary">Popular</Button>
-              </KeyboardWrapper>
-              <KeyboardWrapper
-                ref={recommendedRef}
-                data-stable-id="channelinfo-filter-recommended"
-              >
-                <Button variant="secondary">Recommended</Button>
-              </KeyboardWrapper>
-              <KeyboardWrapper
-                ref={newRef}
-                data-stable-id="channelinfo-filter-new"
-              >
-                <Button variant="secondary">New</Button>
-              </KeyboardWrapper>
-              <KeyboardWrapper
-                ref={favoritesRef}
-                data-stable-id="channelinfo-filter-favorites"
-              >
-                <Button variant="secondary">Favorites</Button>
-              </KeyboardWrapper>
-            </div>
+            <VariableSwimlane
+              items={channelInfoFilters}
+              renderItem={(filter, i, focused) => (
+                <Button key={filter.id} variant="secondary" size="medium" focused={focused}>{filter.label}</Button>
+              )}
+            />
           </div>
         </div>
         
         {/* Related Channels */}
-        <div style={{ width: '100%', boxSizing: 'border-box', paddingLeft: 0, paddingRight: 0, marginTop: 90 }}>
+        <div style={{ 
+          width: '100%', 
+          boxSizing: 'border-box', 
+          paddingLeft: 0, 
+          paddingRight: 0, 
+          marginTop: 90,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--spacing-s12)', }}>
           <div
             style={{
               fontFamily: 'var(--font-family-secondary)',
