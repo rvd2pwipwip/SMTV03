@@ -41,6 +41,8 @@ export default function VariableSwimlane({
   width = '100%',
   maxContentWidthRatio = 2.5,
   focusedIndex: controlledFocusedIndex,
+  leftPadding = 0,
+  rightPadding = 0,
 })  {
   // Refs for each item to measure width
   const itemRefs = useRef([]);
@@ -88,20 +90,6 @@ export default function VariableSwimlane({
   // Navigation: include More item if present
   const numItems = items.length + (showMore ? 1 : 0);
 
-  /**
-   * Helper to get the value of --screen-side-padding from CSS, with fallback to 100
-   */
-  function getSidePadding() {
-    if (typeof window !== 'undefined') {
-      const root = document.documentElement;
-      const value = getComputedStyle(root).getPropertyValue('--screen-side-padding');
-      const parsed = parseInt(value, 10);
-      return isNaN(parsed) ? 100 : parsed;
-    }
-    return 100;
-  }
-
-  const sidePadding = getSidePadding(); // Use design token for safe zone
   const GAP = getGap(); // Use design token for gap
   const offset = useMemo(() => {
     // Sum widths and gaps of all items before the focused one
@@ -112,9 +100,9 @@ export default function VariableSwimlane({
     // Clamp so row's right edge parks at the inner edge of the right padding
     // GAP/2 is added because in a flex row with gaps, the last item's right edge is half a gap away from the true end of the row.
     // This ensures the row's right edge aligns perfectly with the right padding, matching FixedSwimlane and TV-native parking behavior.
-    const maxOffset = Math.max(0, totalContentWidth - viewportWidth + 2 * sidePadding + GAP / 2);
+    const maxOffset = Math.max(0, totalContentWidth - viewportWidth + leftPadding + rightPadding + GAP / 2);
     return Math.min(sum, maxOffset);
-  }, [focusedIndex, itemWidths, totalContentWidth, viewportWidth, GAP, sidePadding]);
+  }, [focusedIndex, itemWidths, totalContentWidth, viewportWidth, GAP, leftPadding, rightPadding]);
 
   // Keyboard navigation
   React.useEffect(() => {
@@ -168,7 +156,7 @@ export default function VariableSwimlane({
     <div
       ref={containerRef}
       className={`variable-swimlane-viewport ${className}`}
-      style={{ width: typeof width === 'number' ? `${width}px` : width, overflow: 'visible', display: 'flex', alignItems: 'center', paddingLeft: 'var(--screen-side-padding, 100px)', paddingRight: 'var(--screen-side-padding, 100px)' }}
+      style={{ width: typeof width === 'number' ? `${width}px` : width, overflow: 'visible', display: 'flex', alignItems: 'center', paddingLeft: leftPadding, paddingRight: rightPadding }}
       tabIndex={-1}
       aria-label="Variable Swimlane viewport"
       role="region"

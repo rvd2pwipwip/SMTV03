@@ -56,6 +56,8 @@ export default function FixedSwimlane({
   maxVisible = 6, // How many cards visible at once
   focusedIndex: controlledFocusedIndex, // New: controlled focused index
   width = '100%', // Step 1: Add width prop
+  leftPadding = 0,
+  rightPadding = 0,
 }) {
   // Clamp the number of items to maxItems
   const displayItems = items.slice(0, maxItems);
@@ -83,8 +85,6 @@ export default function FixedSwimlane({
   // --- Layout constants ---
   const CARD_WIDTH = 300;
   const CARD_GAP = getCardGap(); // Use design token for gap
-  // Get side padding from CSS variable (single source of truth)
-  const sidePadding = getSidePadding();
   const viewportWidth = containerWidth || 1920; // Step 3: Use measured width
   const totalContentWidth = displayItems.length * CARD_WIDTH + (displayItems.length - 1) * CARD_GAP;
 
@@ -93,10 +93,10 @@ export default function FixedSwimlane({
     const cardFullWidth = CARD_WIDTH + CARD_GAP;
     const left = focusedIndex * cardFullWidth;
     // maxOffset: last card parks at right edge, includes both paddings
-    const maxOffset = Math.max(0, totalContentWidth - viewportWidth + 2 * sidePadding);
+    const maxOffset = Math.max(0, totalContentWidth - viewportWidth + leftPadding + rightPadding);
     // Clamp so we never scroll past the last card
     return Math.min(left, maxOffset);
-  }, [focusedIndex, CARD_WIDTH, CARD_GAP, displayItems.length, viewportWidth, totalContentWidth, sidePadding]);
+  }, [focusedIndex, CARD_WIDTH, CARD_GAP, displayItems.length, viewportWidth, totalContentWidth, leftPadding, rightPadding]);
 
   // When swimlane becomes focused, focus the container div (for accessibility)
   useEffect(() => {
@@ -160,8 +160,8 @@ export default function FixedSwimlane({
       style={{
         width: typeof width === 'number' ? `${width}px` : width,
         margin: '0 auto',
-        paddingLeft: 'var(--screen-side-padding, 100px)', // Use CSS var for left padding
-        paddingRight: 'var(--screen-side-padding, 100px)', // Use CSS var for right padding
+        paddingLeft: leftPadding,
+        paddingRight: rightPadding,
         outline: 'none',
       }}
       tabIndex={-1}

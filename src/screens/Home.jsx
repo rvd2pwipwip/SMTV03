@@ -14,6 +14,17 @@ import VariableSwimlane from '../components/VariableSwimlane';
 import { fakeFilters } from '../data/fakeFilters';
 import { useFocusNavigation } from '../contexts/FocusNavigationContext';
 
+// Helper to get the value of --screen-side-padding from CSS, with fallback to 100
+function getSidePadding() {
+  if (typeof window !== 'undefined') {
+    const root = document.documentElement;
+    const value = getComputedStyle(root).getPropertyValue('--screen-side-padding');
+    const parsed = parseInt(value, 10);
+    return isNaN(parsed) ? 100 : parsed;
+  }
+  return 100;
+}
+
 function Home({ onChannelSelect }) {
   // Use plain refs for each card
   const cardRefs = Array.from({ length: 12 }, () => useRef(null));
@@ -203,6 +214,8 @@ function Home({ onChannelSelect }) {
             setFiltersFocusedIndex(index);
             setGroupFocusMemory(FILTERS_GROUP, { focusedIndex: index });
           }}
+          leftPadding={getSidePadding()}
+          rightPadding={getSidePadding()}
         />
 
         <FixedSwimlane
@@ -225,6 +238,8 @@ function Home({ onChannelSelect }) {
             setGroupFocusMemory(SWIMLANE_GROUP, { focusedIndex: index });
           }}
           onSelect={onChannelSelect}
+          leftPadding={getSidePadding()}
+          rightPadding={getSidePadding()}
         />
       </div>
       {/* Ad banner is outside the navigation context and not focusable */}
