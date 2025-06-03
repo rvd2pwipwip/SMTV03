@@ -162,6 +162,7 @@ export default function FixedSwimlane({
         margin: '0 auto',
         paddingLeft: 'var(--screen-side-padding, 100px)', // Use CSS var for left padding
         paddingRight: 'var(--screen-side-padding, 100px)', // Use CSS var for right padding
+        outline: 'none',
       }}
       tabIndex={-1}
       aria-label="Swimlane viewport"
