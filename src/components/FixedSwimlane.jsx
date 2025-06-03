@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useLayoutEffect } from 'react';
 
 /**
  * FixedSwimlane (formerly GenericSwimlane)
@@ -55,6 +55,7 @@ export default function FixedSwimlane({
   onFocusChange,
   maxVisible = 6, // How many cards visible at once
   focusedIndex: controlledFocusedIndex, // New: controlled focused index
+  width = '100%', // Step 1: Add width prop
 }) {
   // Clamp the number of items to maxItems
   const displayItems = items.slice(0, maxItems);
@@ -66,16 +67,26 @@ export default function FixedSwimlane({
   const focusedIndex =
     typeof controlledFocusedIndex === 'number' ? controlledFocusedIndex : uncontrolledFocusedIndex;
 
-  // Ref to the container div for key event handling
+  // Ref to the container div for key event handling and measuring width
   const containerRef = useRef(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  // Step 2: Measure container width
+  useLayoutEffect(() => {
+    if (!containerRef.current) return;
+    const updateWidth = () => setContainerWidth(containerRef.current.offsetWidth);
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
 
   // --- Layout constants ---
   const CARD_WIDTH = 300;
   const CARD_GAP = getCardGap(); // Use design token for gap
   // Get side padding from CSS variable (single source of truth)
   const sidePadding = getSidePadding();
-  const viewportWidth = maxVisible * CARD_WIDTH + (maxVisible - 1) * CARD_GAP;
-  const totalContentWidth = displayItems.length * (CARD_WIDTH + CARD_GAP);
+  const viewportWidth = containerWidth || 1920; // Step 3: Use measured width
+  const totalContentWidth = displayItems.length * CARD_WIDTH + (displayItems.length - 1) * CARD_GAP;
 
   // --- Offset/Parking Logic (mirrored paddings) ---
   const offset = useMemo(() => {
@@ -144,9 +155,10 @@ export default function FixedSwimlane({
   // Row: slides left/right via transform
   return (
     <div
+      ref={containerRef}
       className={`fixed-swimlane-viewport ${className}`}
       style={{
-        width: viewportWidth,
+        width: typeof width === 'number' ? `${width}px` : width,
         margin: '0 auto',
         paddingLeft: 'var(--screen-side-padding, 100px)', // Use CSS var for left padding
         paddingRight: 'var(--screen-side-padding, 100px)', // Use CSS var for right padding
@@ -156,7 +168,6 @@ export default function FixedSwimlane({
       role="region"
     >
       <div
-        ref={containerRef}
         className="fixed-swimlane-row"
         style={{
           display: 'flex',

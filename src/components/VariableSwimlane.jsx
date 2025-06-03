@@ -38,10 +38,10 @@ export default function VariableSwimlane({
   focused = false,
   onSelect,
   onFocusChange,
-  viewportWidth = 1920, // default TV width
-  maxContentWidthRatio = 2.5, // max content width = 2.5x viewport
-  focusedIndex: controlledFocusedIndex, // New: controlled focused index
-}) {
+  width = '100%',
+  maxContentWidthRatio = 2.5,
+  focusedIndex: controlledFocusedIndex,
+})  {
   // Refs for each item to measure width
   const itemRefs = useRef([]);
   // State for measured widths
@@ -54,6 +54,17 @@ export default function VariableSwimlane({
   const focusedIndex =
     typeof controlledFocusedIndex === 'number' ? controlledFocusedIndex : uncontrolledFocusedIndex;
 
+  // Step 2: Measure container width
+  const containerRef = useRef(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+  useLayoutEffect(() => {
+    if (!containerRef.current) return;
+    const updateWidth = () => setContainerWidth(containerRef.current.offsetWidth);
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
+
   // Helper: measure widths after render
   useLayoutEffect(() => {
     if (!items.length) return;
@@ -62,12 +73,11 @@ export default function VariableSwimlane({
     setItemWidths(widths);
   }, [items]);
 
-  // Calculate total content width
+  // Step 3: Use measured width for viewport
+  const viewportWidth = containerWidth || 1920; // fallback if not measured yet
   const totalContentWidth = useMemo(() => {
     return itemWidths.reduce((sum, w) => sum + w, 0) + (itemWidths.length - 1) * 30; // 30px gap
   }, [itemWidths]);
-
-  // Calculate max content width
   const maxContentWidth = viewportWidth * maxContentWidthRatio;
 
   // Show More item if content is too wide
@@ -156,8 +166,9 @@ export default function VariableSwimlane({
   // Render
   return (
     <div
+      ref={containerRef}
       className={`variable-swimlane-viewport ${className}`}
-      style={{ width: viewportWidth, overflow: 'visible', display: 'flex', alignItems: 'center', paddingLeft: 'var(--screen-side-padding, 100px)', paddingRight: 'var(--screen-side-padding, 100px)' }}
+      style={{ width: typeof width === 'number' ? `${width}px` : width, overflow: 'visible', display: 'flex', alignItems: 'center', paddingLeft: 'var(--screen-side-padding, 100px)', paddingRight: 'var(--screen-side-padding, 100px)' }}
       tabIndex={-1}
       aria-label="Variable Swimlane viewport"
       role="region"
