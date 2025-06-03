@@ -6,6 +6,7 @@ import KeyboardWrapper from '../components/KeyboardWrapper';
 import { Like, SingNow } from 'stingray-icons';
 import AdBanner from '../components/AdBanner';
 
+
 function ChannelInfo({ channel, onBack, onPlay }) {
   // Use plain refs for focusable elements
   const actionGroupRef = useRef(null);
