@@ -119,18 +119,8 @@ export default function VariableSwimlane({
   // --- Ensure active filter is visible (with animation) on mount or when activeIndex changes ---
   useLayoutEffect(() => {
     if (!ensureActiveVisible || activeIndex == null || !itemWidths.length || !containerWidth) return;
-    // Calculate left and right pixel positions of the active filter
-    let leftEdge = 0;
-    for (let i = 0; i < activeIndex; i++) {
-      leftEdge += (itemWidths[i] || 0) + GAP;
-    }
-    const activeWidth = itemWidths[activeIndex] || 0;
-    const rightEdge = leftEdge + activeWidth;
-    // If the active filter is already fully visible, do nothing
-    if (leftEdge >= offset && rightEdge <= offset + containerWidth) {
-      return; // Already visible, no need to animate
-    }
-    // Otherwise, animate offset so the active filter is fully visible (park at left edge)
+    // Always animate and park the active filter at the left edge (or as far as possible, respecting max offset)
+    // This draws user attention and provides a consistent, predictable swimlane experience.
     setShouldAnimate(true);
     setOffset(calcOffsetForIndex(activeIndex));
   }, [ensureActiveVisible, activeIndex, itemWidths, containerWidth]);
