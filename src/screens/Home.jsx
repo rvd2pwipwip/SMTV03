@@ -11,10 +11,17 @@ import { fakeChannels } from '../data/fakeChannels';
 import VariableSwimlane from '../components/VariableSwimlane';
 import { tvHomeFilters } from '../data/tvHomeFilters';
 import { genreFilters } from '../data/genreFilters';
-import { useFocusNavigation } from '../contexts/FocusNavigationContext';
+import { useFocusNavigation } from '../contexts/GroupFocusNavigationContext';
 import { getSidePadding } from '../utils/layout';
+import { useScreenMemory } from '../contexts/ScreenMemoryContext';
 
 function Home({ onChannelSelect }) {
+  // Use persistent screen memory for activeFilterId
+  const { memory, setField } = useScreenMemory('home');
+  // Use memory.activeFilterId as the source of truth, fallback to first filter
+  const activeFilterId = memory.activeFilterId || genreFilters[0]?.id;
+  const setActiveFilterId = (id) => setField('activeFilterId', id);
+
   // Use plain refs for each card
   const cardRefs = Array.from({ length: 12 }, () => useRef(null));
   const searchRef = useRef(null);
@@ -36,9 +43,6 @@ function Home({ onChannelSelect }) {
   const HEADER_GROUP = 0;
   const FILTERS_GROUP = 1;
   const SWIMLANE_GROUP = 2;
-
-  // Track active filter for the filter swimlane
-  const [activeFilterId, setActiveFilterId] = useState(genreFilters[0]?.id);
 
   // Get the last focused index for the filter group from context
   const filtersMemory = getGroupFocusMemory(FILTERS_GROUP);
@@ -234,6 +238,8 @@ function Home({ onChannelSelect }) {
           }}
           leftPadding={getSidePadding()}
           rightPadding={getSidePadding()}
+          ensureActiveVisible={true}
+          activeIndex={genreFilters.findIndex(f => f.id === activeFilterId)}
         />
 
         <FixedSwimlane

@@ -1,3 +1,6 @@
+// GroupFocusNavigationContext: Handles vertical group navigation and per-group focus memory for TV UIs.
+// Use for up/down navigation and restoring focus within a screen.
+// Not for persistent screen state across navigation.
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 /**
@@ -21,7 +24,7 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
  */
 const FocusNavigationContext = createContext();
 
-export function FocusNavigationProvider({ groupCount = 3, initialGroupIndex = 0, children }) {
+export function GroupFocusNavigationProvider({ groupCount = 3, initialGroupIndex = 0, children }) {
   // Which group is currently focused (0 = header, 1 = filters, 2 = swimlane, ...)
   const [focusedGroupIndex, setFocusedGroupIndex] = useState(initialGroupIndex);
 

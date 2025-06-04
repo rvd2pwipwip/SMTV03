@@ -3,7 +3,8 @@ import Home from './screens/Home';
 import ChannelInfo from './screens/ChannelInfo';
 import Player from './screens/Player';
 import './styles/App.css';
-import { FocusNavigationProvider } from './contexts/FocusNavigationContext';
+import { GroupFocusNavigationProvider } from './contexts/GroupFocusNavigationContext';
+import { ScreenMemoryProvider } from './contexts/ScreenMemoryContext';
 
 function AppContent() {
   const [screenStack, setScreenStack] = useState(['home']);
@@ -65,9 +66,11 @@ function AppContent() {
 function App() {
   // Home: header=0, filters=1, swimlane=2
   return (
-    <FocusNavigationProvider groupCount={3} initialGroupIndex={2}>
-      <AppContent />
-    </FocusNavigationProvider>
+    <GroupFocusNavigationProvider groupCount={3} initialGroupIndex={2}>
+      <ScreenMemoryProvider>
+        <AppContent />
+      </ScreenMemoryProvider>
+    </GroupFocusNavigationProvider>
   );
 }
 
