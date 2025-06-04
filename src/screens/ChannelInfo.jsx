@@ -5,6 +5,7 @@ import ChannelRow from '../components/ChannelRow';
 import KeyboardWrapper from '../components/KeyboardWrapper';
 import { Like, SingNow } from 'stingray-icons';
 import AdBanner from '../components/AdBanner';
+import { getSidePadding } from '../utils/layout';
 
 
 function ChannelInfo({ channel, onBack, onPlay }) {
@@ -43,7 +44,7 @@ function ChannelInfo({ channel, onBack, onPlay }) {
       <div style={{ 
         width: '100%', 
         boxSizing: 'border-box', 
-        padding: 'var(--screen-side-padding) var(--screen-side-padding)', 
+        padding: `${getSidePadding()}px`, 
         display: 'flex', 
         flexDirection: 'column', 
         gap: 15, 
