@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ChannelCard, Button } from '@smtv/tv-component-library';
 import '../styles/App.css';
 import ChannelRow from '../components/ChannelRow';
@@ -7,6 +7,7 @@ import { Like, SingNow } from 'stingray-icons';
 import AdBanner from '../components/AdBanner';
 import { getSidePadding } from '../utils/layout';
 import VariableSwimlane from '../components/VariableSwimlane';
+import { useFocusNavigation } from '../contexts/GroupFocusNavigationContext';
 
 
 function ChannelInfo({ channel, onBack, onPlay }) {
@@ -27,14 +28,48 @@ function ChannelInfo({ channel, onBack, onPlay }) {
   const relatedCard4Ref = useRef(null);
   const relatedCard5Ref = useRef(null);
 
-  // Set initial focus to Play button on mount (optional, for keyboard users)
+  // Define group indices for up/down navigation
+  const ACTIONS_GROUP = 0;
+  const FILTERS_GROUP = 1;
+  const RELATED_GROUP = 2;
+
+  const {
+    focusedGroupIndex,
+    setFocusedGroupIndex,
+    moveFocusUp,
+    moveFocusDown,
+    getGroupFocusMemory,
+    setGroupFocusMemory
+  } = useFocusNavigation();
+
   useEffect(() => {
-    if (playRef && playRef.current) {
-      setTimeout(() => {
-        playRef.current.focus();
-      }, 0);
-    }
+    setActionsFocusedIndex(0); // Focus Play button in actions group
+    setGroupFocusMemory(ACTIONS_GROUP, { focusedIndex: 0 });
+    setFocusedGroupIndex(ACTIONS_GROUP);
   }, []);
+
+  const actionsMemory = getGroupFocusMemory(ACTIONS_GROUP);
+  const [actionsFocusedIndex, setActionsFocusedIndex] = useState(actionsMemory.focusedIndex ?? 0);
+
+  const filtersMemory = getGroupFocusMemory(FILTERS_GROUP);
+  const [filtersFocusedIndex, setFiltersFocusedIndex] = useState(filtersMemory.focusedIndex ?? 0);
+
+  const relatedMemory = getGroupFocusMemory(RELATED_GROUP);
+  const [relatedFocusedIndex, setRelatedFocusedIndex] = useState(relatedMemory.focusedIndex ?? 0);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowDown') {
+        moveFocusDown();
+        e.preventDefault();
+      } else if (e.key === 'ArrowUp') {
+        moveFocusUp();
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [moveFocusUp, moveFocusDown]);
 
   const handleChannelSelect = () => {
     console.log('Channel selected');
@@ -119,17 +154,21 @@ function ChannelInfo({ channel, onBack, onPlay }) {
                     size="medium"
                     variant={item.variant}
                     onClick={item.onClick}
-                    autoFocus={isFocused}
+                    // autoFocus={isFocused}
+                    focused={isFocused} 
                   >
                     {item.label}
                   </Button>
                 </KeyboardWrapper>
               )}
               className="channelinfo-action-swimlane"
-              // leftPadding={getSidePadding()}
-              // rightPadding={getSidePadding()}
               width={"100%"}
-              focused={true}
+              focused={focusedGroupIndex === ACTIONS_GROUP}
+              focusedIndex={actionsFocusedIndex}
+              onFocusChange={(index) => {
+                setActionsFocusedIndex(index);
+                setGroupFocusMemory(ACTIONS_GROUP, { focusedIndex: index });
+              }}
             />
             
             {/* Channel Description */}
