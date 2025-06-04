@@ -154,7 +154,6 @@ function ChannelInfo({ channel, onBack, onPlay }) {
                     size="medium"
                     variant={item.variant}
                     onClick={item.onClick}
-                    // autoFocus={isFocused}
                     focused={isFocused} 
                   >
                     {item.label}
