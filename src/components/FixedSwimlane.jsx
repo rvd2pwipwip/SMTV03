@@ -1,27 +1,13 @@
 import React, { useEffect, useRef, useState, useMemo, useLayoutEffect } from 'react';
 
 /**
- * FixedSwimlane (formerly GenericSwimlane)
+ * FixedSwimlane
  *
  * This component is for fixed-width, card-style swimlanes (e.g., channels).
  * For variable-width items (e.g., filter buttons), use VariableSwimlane.
  *
- * Now supports a controlled focusedIndex prop for focus memory.
+ * Supports a controlled focusedIndex prop for focus memory.
  */
-
-/**
- * Helper to get the value of --screen-side-padding from CSS, with fallback to 100
- */
-function getSidePadding() {
-  if (typeof window !== 'undefined') {
-    const root = document.documentElement;
-    const value = getComputedStyle(root).getPropertyValue('--screen-side-padding');
-    // Remove 'px' and parse as integer
-    const parsed = parseInt(value, 10);
-    return isNaN(parsed) ? 100 : parsed;
-  }
-  return 100;
-}
 
 /**
  * Helper to get the value of --spacing-xl from CSS, with fallback to 32
@@ -36,14 +22,6 @@ function getCardGap() {
   return 32;
 }
 
-/**
- * GenericSwimlane - Step 5: Single source of truth for side padding (CSS variable)
- *
- * - Uses --screen-side-padding from CSS for both JS math and CSS style
- * - Fallback to 100 if variable is not set
- * - maxOffset includes both left and right paddings
- * - Learning comments throughout
- */
 export default function FixedSwimlane({
   items = [],
   renderItem,
@@ -54,7 +32,7 @@ export default function FixedSwimlane({
   onSelect,
   onFocusChange,
   maxVisible = 6, // How many cards visible at once
-  focusedIndex: controlledFocusedIndex, // New: controlled focused index
+  focusedIndex: controlledFocusedIndex,
   width = '100%', // Step 1: Add width prop
   leftPadding = 0,
   rightPadding = 0,
