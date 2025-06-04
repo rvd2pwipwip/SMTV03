@@ -105,6 +105,14 @@ function Home({ onChannelSelect }) {
     }
   }, [focusedGroupIndex, hasVisitedHeader, headerFocusedIndex, setGroupFocusMemory]);
 
+  // Blur header buttons when leaving header group to remove focus ring
+  useEffect(() => {
+    if (focusedGroupIndex !== HEADER_GROUP) {
+      searchRef.current?.blur();
+      infoRef.current?.blur();
+    }
+  }, [focusedGroupIndex]);
+
   // Example click handler
   const handleCardClick = (channelData) => {
     onChannelSelect(channelData);
