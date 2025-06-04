@@ -1,4 +1,4 @@
-export const fakeFilters = [
+export const genreFilters = [
   { id: 'pop', label: 'Pop' },
   { id: 'wellness', label: 'Wellness' },
   { id: 'rock', label: 'Rock' },
