@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect } from 'react';
-import KeyboardWrapper from '../components/KeyboardWrapper';
 import { ChannelCard, Button } from '@smtv/tv-component-library';
 import '@smtv/tv-component-library/dist/style.css';
 import '../styles/App.css';
@@ -7,10 +6,10 @@ import AdBanner from '../components/AdBanner';
 import { MagnifyingGlass, Info } from 'stingray-icons';
 import stingrayMusicLogo from '../assets/svg/stingrayMusic.svg';
 import { TRANS_BTN_ICON_SIZE } from '../constants/ui';
-import ChannelInfo from './ChannelInfo';
 import FixedSwimlane from '../components/FixedSwimlane';
 import { fakeChannels } from '../data/fakeChannels';
 import VariableSwimlane from '../components/VariableSwimlane';
+import { tvHomeFilters } from '../data/tvHomeFilters';
 import { genreFilters } from '../data/genreFilters';
 import { useFocusNavigation } from '../contexts/FocusNavigationContext';
 import { getSidePadding } from '../utils/layout';
