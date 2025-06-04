@@ -105,6 +105,27 @@ function Home({ onChannelSelect }) {
     }
   }, [focusedGroupIndex, hasVisitedHeader, headerFocusedIndex, setGroupFocusMemory]);
 
+  useEffect(() => {
+    if (focusedGroupIndex !== HEADER_GROUP) return;
+  
+    const handleHeaderKeyDown = (e) => {
+      if (e.key === 'ArrowRight' && headerFocusedIndex === 0) {
+        setHeaderFocusedIndex(1);
+        setGroupFocusMemory(HEADER_GROUP, { focusedIndex: 1 });
+        infoRef.current?.focus();
+        e.preventDefault();
+      } else if (e.key === 'ArrowLeft' && headerFocusedIndex === 1) {
+        setHeaderFocusedIndex(0);
+        setGroupFocusMemory(HEADER_GROUP, { focusedIndex: 0 });
+        searchRef.current?.focus();
+        e.preventDefault();
+      }
+    };
+  
+    window.addEventListener('keydown', handleHeaderKeyDown);
+    return () => window.removeEventListener('keydown', handleHeaderKeyDown);
+  }, [focusedGroupIndex, headerFocusedIndex, setGroupFocusMemory]);
+
   // Blur header buttons when leaving header group to remove focus ring
   useEffect(() => {
     if (focusedGroupIndex !== HEADER_GROUP) {
