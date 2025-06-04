@@ -272,4 +272,41 @@ const [screenStack, setScreenStack] = useState(['home']);
 - Understanding screen stack patterns
 - Mastering focus management across screens
 - Implementing TV-specific navigation
-- Testing screen transitions 
+- Testing screen transitions
+
+## Step-by-step: Merging a Feature Branch into Main
+
+1. **While on your feature branch (e.g., `screen-navigation`):**
+   - Make sure all your changes are committed.
+
+2. **Switch to main:**
+   ```sh
+   git checkout main
+   ```
+
+3. **Merge your feature branch into main:**
+   ```sh
+   git merge <your-feature-branch>
+   ```
+   - This brings all changes from `<your-feature-branch>` into `main`.
+
+4. **Push main to the remote:**
+   ```sh
+   git push
+   ```
+
+5. **(Optional) Start a new branch from main:**
+   ```sh
+   git checkout -b new-feature-branch
+   ```
+
+**CLI Command Explanation**
+
+| Command | What it does |
+|---------|--------------|
+| `git checkout main` | Switches to the main branch |
+| `git merge <your-feature-branch>` | Merges the feature branch into main |
+| `git push` | Pushes the updated main branch to the remote repository |
+| `git checkout -b new-feature-branch` | Creates and switches to a new branch from main |
+
+**Tip:** Always specify the branch you want to merge. Avoid using `$(git branch --show-current)` unless you are scripting and know you are not on main. 
