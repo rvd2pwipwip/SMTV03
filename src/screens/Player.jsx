@@ -7,6 +7,7 @@ import KeyboardWrapper from '../components/KeyboardWrapper';
 import { Button } from '@smtv/tv-component-library';
 import { TRANS_BTN_ICON_SIZE } from '../constants/ui';
 import AdBanner from '../components/AdBanner';
+import { getSidePadding } from '../utils/layout';
 
 function Player({ channel, onBack }) {
   // Use plain refs for focusable elements
@@ -33,14 +34,14 @@ function Player({ channel, onBack }) {
         gap: 10,
         alignItems: 'center',
         justifyContent: 'flex-start',
-        paddingTop: 'var(--screen-side-padding)',
+        paddingTop: `${getSidePadding()}px`,
         boxSizing: 'border-box',
       }}>
         {/* Absolute logo */}
         <div style={{
           position: 'absolute',
-          left: 'var(--screen-side-padding)',
-          top: 'var(--screen-side-padding)',
+          left: `${getSidePadding()}px`,
+          top: `${getSidePadding()}px`,
           width: 245,
           height: 70,
           display: 'flex',
@@ -102,7 +103,7 @@ function Player({ channel, onBack }) {
       <div style={{
         position: 'relative',
         width: '100%',
-        padding: '24px var(--screen-side-padding) 0px',
+        padding: `24px ${getSidePadding()}px 0px`,
         zIndex: 2,
         display: 'flex',
         flexDirection: 'column',
