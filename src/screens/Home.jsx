@@ -19,7 +19,7 @@ function Home({ onChannelSelect }) {
   // Use persistent screen memory for activeFilterId
   const { memory, setField } = useScreenMemory('home');
   // Use memory.activeFilterId as the source of truth, fallback to first filter
-  const activeFilterId = memory.activeFilterId || genreFilters[0]?.id;
+  const activeFilterId = memory.activeFilterId || tvHomeFilters[0]?.id;
   const setActiveFilterId = (id) => setField('activeFilterId', id);
 
   // Use plain refs for each card
@@ -216,7 +216,7 @@ function Home({ onChannelSelect }) {
           - Focus ring is handled by Button component
         */}
         <VariableSwimlane
-          items={genreFilters}
+          items={tvHomeFilters}
           renderItem={(filter, i, focused) => (
             <Button
               key={filter.id}
@@ -239,7 +239,7 @@ function Home({ onChannelSelect }) {
           leftPadding={getSidePadding()}
           rightPadding={getSidePadding()}
           ensureActiveVisible={true}
-          activeIndex={genreFilters.findIndex(f => f.id === activeFilterId)}
+          activeIndex={tvHomeFilters.findIndex(f => f.id === activeFilterId)}
         />
 
         <FixedSwimlane
