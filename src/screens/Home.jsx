@@ -26,9 +26,6 @@ function Home({ onChannelSelect }) {
   const cardRefs = Array.from({ length: 12 }, () => useRef(null));
   const searchRef = useRef(null);
   const infoRef = useRef(null);
-  const testButtonRef = useRef(null);
-  const slidingSwimlaneRef = useRef(null);
-  const swimlaneRef = useRef(null);
 
   // Use navigation context for vertical group focus
   const { 

@@ -6,6 +6,7 @@ import KeyboardWrapper from '../components/KeyboardWrapper';
 import { Like, SingNow } from 'stingray-icons';
 import AdBanner from '../components/AdBanner';
 import { getSidePadding } from '../utils/layout';
+import VariableSwimlane from '../components/VariableSwimlane';
 
 
 function ChannelInfo({ channel, onBack, onPlay }) {
@@ -86,39 +87,50 @@ function ChannelInfo({ channel, onBack, onPlay }) {
             </h1>
             
             {/* Action Buttons */}
-            <div 
-              ref={actionGroupRef}
-              style={{ display: 'flex', gap: 24 }}
-            >
-              <KeyboardWrapper
-                ref={playRef}
-                data-stable-id="channelinfo-action-play"
-                onSelect={onPlay}
-              >
-                <Button
-                  icon={<SingNow />}
-                  showIcon
-                  size="medium"
-                  variant="primary"
-                  onClick={onPlay}
+            <VariableSwimlane
+              items={[
+                {
+                  id: 'play',
+                  label: 'Play',
+                  icon: <SingNow />, 
+                  variant: 'primary',
+                  ref: playRef,
+                  onClick: onPlay,
+                  dataStableId: 'channelinfo-action-play',
+                },
+                {
+                  id: 'fav',
+                  label: 'Add to Favorites',
+                  icon: <Like />, 
+                  variant: 'secondary',
+                  ref: favRef,
+                  dataStableId: 'channelinfo-action-fav',
+                },
+              ]}
+              renderItem={(item, i, isFocused) => (
+                <KeyboardWrapper
+                  ref={item.ref}
+                  data-stable-id={item.dataStableId}
+                  key={item.id}
                 >
-                  Play
-                </Button>
-              </KeyboardWrapper>
-              <KeyboardWrapper
-                ref={favRef}
-                data-stable-id="channelinfo-action-fav"
-              >
-                <Button
-                  icon={<Like />}
-                  showIcon
-                  size="medium"
-                  variant="secondary"
-                >
-                  Add to Favorites
-                </Button>
-              </KeyboardWrapper>
-            </div>
+                  <Button
+                    icon={item.icon}
+                    showIcon
+                    size="medium"
+                    variant={item.variant}
+                    onClick={item.onClick}
+                    autoFocus={isFocused}
+                  >
+                    {item.label}
+                  </Button>
+                </KeyboardWrapper>
+              )}
+              className="channelinfo-action-swimlane"
+              // leftPadding={getSidePadding()}
+              // rightPadding={getSidePadding()}
+              width={"100%"}
+              focused={true}
+            />
             
             {/* Channel Description */}
             <div
