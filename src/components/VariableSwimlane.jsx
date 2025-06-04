@@ -64,6 +64,9 @@ export default function VariableSwimlane({
   // Step 2: Measure container width
   const containerRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
+  // --- Animation control ---
+  const [shouldAnimate, setShouldAnimate] = useState(false);
+
   useLayoutEffect(() => {
     if (!containerRef.current) return;
     const updateWidth = () => setContainerWidth(containerRef.current.offsetWidth);
@@ -109,10 +112,19 @@ export default function VariableSwimlane({
     return Math.min(sum, maxOffset);
   }, [focusedIndex, itemWidths, totalContentWidth, viewportWidth, GAP, leftPadding, rightPadding]);
 
-  // Keyboard navigation
+  // --- Animation logic ---
+  // Disable animation on mount and when focusedIndex is restored from memory
+  React.useEffect(() => {
+    setShouldAnimate(false);
+  }, [items, containerWidth, focusedIndex]);
+
+  // Enable animation on user navigation
   React.useEffect(() => {
     if (!focused) return;
     const handleKeyDown = (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        setShouldAnimate(true);
+      }
       if (e.key === 'ArrowRight') {
         if (typeof controlledFocusedIndex === 'number') {
           onFocusChange && onFocusChange(Math.min(focusedIndex + 1, numItems - 1));
@@ -172,7 +184,7 @@ export default function VariableSwimlane({
           display: 'flex',
           gap: GAP,
           transform: `translateX(-${offset}px)`,
-          transition: 'transform 0.3s cubic-bezier(.4,1.3,.6,1)',
+          transition: shouldAnimate ? 'transform 0.3s cubic-bezier(.4,1.3,.6,1)' : 'none',
         }}
         tabIndex={-1}
         aria-label="Variable Swimlane"
