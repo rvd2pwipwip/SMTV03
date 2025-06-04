@@ -7,6 +7,12 @@ import React, { useEffect, useRef, useState, useMemo, useLayoutEffect } from 're
  * For variable-width items (e.g., filter buttons), use VariableSwimlane.
  *
  * Supports a controlled focusedIndex prop for focus memory.
+ *
+ * Padding on the left and right is controlled by the optional leftPadding and rightPadding props.
+ * By default, both are 0. You can pass a value (e.g., from getSidePadding()) to use a CSS variable or any other value.
+ *
+ * Example usage:
+ *   <FixedSwimlane leftPadding={getSidePadding()} rightPadding={getSidePadding()} ... />
  */
 
 /**
@@ -33,7 +39,7 @@ export default function FixedSwimlane({
   onFocusChange,
   maxVisible = 6, // How many cards visible at once
   focusedIndex: controlledFocusedIndex,
-  width = '100%', // Step 1: Add width prop
+  width = '100%',
   leftPadding = 0,
   rightPadding = 0,
 }) {
@@ -67,6 +73,7 @@ export default function FixedSwimlane({
   const totalContentWidth = displayItems.length * CARD_WIDTH + (displayItems.length - 1) * CARD_GAP;
 
   // --- Offset/Parking Logic (mirrored paddings) ---
+  // maxOffset includes both left and right paddings, as set by props
   const offset = useMemo(() => {
     const cardFullWidth = CARD_WIDTH + CARD_GAP;
     const left = focusedIndex * cardFullWidth;

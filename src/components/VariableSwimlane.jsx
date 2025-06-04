@@ -16,7 +16,7 @@ function getGap() {
 /**
  * VariableSwimlane - for variable-width items (e.g., filter buttons)
  *
- * Now supports a controlled focusedIndex prop for focus memory.
+ * Supports a controlled focusedIndex prop for focus memory.
  *
  * Features:
  * - Accepts items and renderItem
@@ -27,7 +27,12 @@ function getGap() {
  * - More item is navigable and included in offset math
  * - Only horizontal navigation/Enter
  * - Single row only
- * - Learning comments throughout
+ *
+ * Padding on the left and right is controlled by the optional leftPadding and rightPadding props.
+ * By default, both are 0. You can pass a value (e.g., from getSidePadding()) to use a CSS variable or any other value.
+ *
+ * Example usage:
+ *   <VariableSwimlane leftPadding={getSidePadding()} rightPadding={getSidePadding()} ... />
  */
 export default function VariableSwimlane({
   items = [],
