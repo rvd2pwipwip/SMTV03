@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { ChannelCard, Button } from '@smtv/tv-component-library';
 import '../styles/App.css';
 import ChannelRow from '../components/ChannelRow';
@@ -8,9 +9,10 @@ import AdBanner from '../components/AdBanner';
 import { getSidePadding } from '../utils/layout';
 import VariableSwimlane from '../components/VariableSwimlane';
 import { useFocusNavigation } from '../contexts/GroupFocusNavigationContext';
+import { fakeChannels } from '../data/fakeChannels';
 
 
-function ChannelInfo({ channel, onBack, onPlay }) {
+function ChannelInfo() {
   // Use plain refs for focusable elements
   const actionGroupRef = useRef(null);
   const playRef = useRef(null);
@@ -28,6 +30,15 @@ function ChannelInfo({ channel, onBack, onPlay }) {
   const relatedCard4Ref = useRef(null);
   const relatedCard5Ref = useRef(null);
 
+  // Get the channelId from the URL params and the state from the previous screen
+  const { channelId } = useParams();
+  console.log('ChannelInfo loaded for channelId:', channelId);
+  const location = useLocation();
+  const { state } = location;
+  const navigate = useNavigate();
+
+  const channel = fakeChannels.find(c => String(c.id) === String(channelId));
+
   // Define group indices for up/down navigation
   const ACTIONS_GROUP = 0;
   const FILTERS_GROUP = 1;
@@ -43,10 +54,12 @@ function ChannelInfo({ channel, onBack, onPlay }) {
   } = useFocusNavigation();
 
   useEffect(() => {
-    setActionsFocusedIndex(0); // Focus Play button in actions group
-    setGroupFocusMemory(ACTIONS_GROUP, { focusedIndex: 0 });
-    setFocusedGroupIndex(ACTIONS_GROUP);
-  }, []);
+    if (!state?.fromHome) {
+      setActionsFocusedIndex(0);
+      setGroupFocusMemory(ACTIONS_GROUP, { focusedIndex: 0 });
+      setFocusedGroupIndex(ACTIONS_GROUP);
+    }
+  }, [state, channelId]);
 
   const actionsMemory = getGroupFocusMemory(ACTIONS_GROUP);
   const [actionsFocusedIndex, setActionsFocusedIndex] = useState(actionsMemory.focusedIndex ?? 0);
@@ -130,7 +143,9 @@ function ChannelInfo({ channel, onBack, onPlay }) {
                   icon: <SingNow />, 
                   variant: 'primary',
                   ref: playRef,
-                  onClick: onPlay,
+                  onClick: () => {
+                    // Implement play logic
+                  },
                   dataStableId: 'channelinfo-action-play',
                 },
                 {

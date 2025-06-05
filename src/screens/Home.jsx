@@ -8,14 +8,16 @@ import stingrayMusicLogo from '../assets/svg/stingrayMusic.svg';
 import { TRANS_BTN_ICON_SIZE } from '../constants/ui';
 import FixedSwimlane from '../components/FixedSwimlane';
 import { fakeChannels } from '../data/fakeChannels';
+import KeyboardWrapper from '../components/KeyboardWrapper';  
 import VariableSwimlane from '../components/VariableSwimlane';
 import { tvHomeFilters } from '../data/tvHomeFilters';
 import { genreFilters } from '../data/genreFilters';
 import { useFocusNavigation } from '../contexts/GroupFocusNavigationContext';
 import { getSidePadding } from '../utils/layout';
 import { useScreenMemory } from '../contexts/ScreenMemoryContext';
+import { useNavigate } from 'react-router-dom';
 
-function Home({ onChannelSelect }) {
+function Home() {
   // Use persistent screen memory for activeFilterId
   const { memory, setField } = useScreenMemory('home');
   // Use memory.activeFilterId as the source of truth, fallback to first filter
@@ -23,7 +25,7 @@ function Home({ onChannelSelect }) {
   const setActiveFilterId = (id) => setField('activeFilterId', id);
 
   // Use plain refs for each card
-  const cardRefs = Array.from({ length: 12 }, () => useRef(null));
+  const cardRefs = useRef([]);
   const searchRef = useRef(null);
   const infoRef = useRef(null);
 
@@ -44,6 +46,19 @@ function Home({ onChannelSelect }) {
   // Get the last focused index for the filter group from context
   const filtersMemory = getGroupFocusMemory(FILTERS_GROUP);
   const [filtersFocusedIndex, setFiltersFocusedIndex] = useState(filtersMemory.focusedIndex);
+
+  const navigate = useNavigate();
+
+  const handleChannelSelect = (channel) => {
+    console.log('Navigating to channel:', channel.id);
+    // Save focus memory if needed
+    navigate(`/channel-info/${channel.id}`, {
+      state: {
+        fromHome: true,
+        // Add more state here if needed
+      }
+    });
+  };
 
   // When the group regains focus, restore the last focused index
   useEffect(() => {
@@ -134,39 +149,27 @@ function Home({ onChannelSelect }) {
     }
   }, [focusedGroupIndex]);
 
-  // Example click handler
-  const handleCardClick = (channelData) => {
-    onChannelSelect(channelData);
-  };
+  // Ensures the DOM focus matches your app visual focus.
+  useEffect(() => {
+    if (
+      focusedGroupIndex === SWIMLANE_GROUP &&
+      cardRefs.current[swimlaneFocusedIndex]
+    ) {
+      cardRefs.current[swimlaneFocusedIndex].focus();
+    }
+  }, [swimlaneFocusedIndex, focusedGroupIndex]);
 
   return (
-    <div
-      style={{
-        width: '1920px',
-        height: '1080px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'stretch',
-        justifyContent: 'flex-start',
-        background: 'var(--app-background, #000)',
-        margin: '0 auto',
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        boxShadow: '0 0 32px rgba(0,0,0,0.5)',
-        overflow: 'hidden',
-      }}
-    >
+    <>
       {/* Main navigation stack: header, filters, swimlane */}
       <div
-        className="main-content"
+        className="home-content"
         style={{
           display: 'flex',
           flexDirection: 'column',
           // Use design token for vertical gap between main sections
           gap: 'var(--spacing-xxl)',
-          height: 'calc(100vh - 150px)',
+          height: `calc(100vh - 150px)`,
           width: '100%',
           justifyContent: 'flex-start',
           alignItems: 'stretch',
@@ -220,7 +223,9 @@ function Home({ onChannelSelect }) {
               variant={filter.id === activeFilterId ? 'primary' : 'secondary'}
               size="medium"
               focused={focused}
-              onClick={() => setActiveFilterId(filter.id)}
+              onClick={
+                () => setActiveFilterId(filter.id) 
+              }
               aria-label={filter.label}
             >
               {filter.label}
@@ -242,13 +247,20 @@ function Home({ onChannelSelect }) {
         <FixedSwimlane
           items={fakeChannels}
           renderItem={(channel, i, focused) => (
-            <ChannelCard
+            <KeyboardWrapper
               key={channel.id}
-              title={channel.title}
-              thumbnailUrl={channel.thumbnailUrl}
-              onClick={() => onChannelSelect(channel)}
-              focused={focused} // Only the focused card shows the focus ring
-            />
+              onSelect={() => handleChannelSelect(channel)}
+              selectData={channel}
+              ref={el => { cardRefs.current[i] = el; }} // <-- Pass ref to KeyboardWrapper
+            >
+              <ChannelCard
+                ref={el => { cardRefs.current[i] = el; }}
+                title={channel.title}
+                thumbnailUrl={channel.thumbnailUrl}
+                focused={focused}
+                onClick={() => handleChannelSelect(channel)}
+              />
+            </KeyboardWrapper>
           )}
           maxItems={12}
           fallbackItem={<div>No channels available</div>}
@@ -258,14 +270,14 @@ function Home({ onChannelSelect }) {
             setSwimlaneFocusedIndex(index);
             setGroupFocusMemory(SWIMLANE_GROUP, { focusedIndex: index });
           }}
-          onSelect={onChannelSelect}
           leftPadding={getSidePadding()}
           rightPadding={getSidePadding()}
         />
       </div>
+      
       {/* Ad banner is outside the navigation context and not focusable */}
       <AdBanner />
-    </div>
+    </>
   );
 }
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import Home from './screens/Home';
 import ChannelInfo from './screens/ChannelInfo';
 import Player from './screens/Player';
@@ -68,7 +69,26 @@ function App() {
   return (
     <GroupFocusNavigationProvider groupCount={3} initialGroupIndex={2}>
       <ScreenMemoryProvider>
-        <AppContent />
+        <div
+          className="app-content"
+          style={{
+            width: '1920px',
+            height: '1080px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'stretch',
+            justifyContent: 'flex-start',
+            background: 'var(--app-background, #000)',
+            margin: '0 auto',
+            position: 'absolute',
+            overflow: 'hidden',
+          }}
+        >
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/channel-info/:channelId" element={<ChannelInfo />} />
+          </Routes>
+        </div>
       </ScreenMemoryProvider>
     </GroupFocusNavigationProvider>
   );

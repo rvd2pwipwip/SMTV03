@@ -16,6 +16,7 @@ import React from 'react';
 const KeyboardWrapper = React.forwardRef(({ onSelect, children, selectData }, ref) => {
   // Handles keydown events for TV remote/keyboard
   const handleKeyDown = (e) => {
+    console.log('KeyDown on ChannelCard:', e.key);
     if (e.key === 'Enter') {
       // Pass selectData and event to onSelect handler
       if (onSelect) onSelect(selectData, e);

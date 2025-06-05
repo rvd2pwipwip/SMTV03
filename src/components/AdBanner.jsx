@@ -12,7 +12,7 @@ const AdBanner = ({ children }) => {
         left: 0,
         bottom: 0,
         width: '100%',
-        height: 150,
+        height: 'var(--ad-banner-height)',
         background: '#888',
         display: 'flex',
         alignItems: 'center',
