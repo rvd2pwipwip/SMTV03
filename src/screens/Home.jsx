@@ -38,8 +38,6 @@ function Home() {
     setGroupFocusMemory
   } = useFocusNavigation();
 
-  console.log('Current focusedGroupIndex:', focusedGroupIndex);
-
   // Group indices
   const HEADER_GROUP = 0;
   const FILTERS_GROUP = 1;
@@ -68,18 +66,14 @@ function Home() {
   useEffect(() => {
     if (focusedGroupIndex === HEADER_GROUP) {
       if (headerFocusedIndex === 0) {
-        console.log('Focusing searchRef');
         searchRef.current?.focus();
       }
       if (headerFocusedIndex === 1) {
-        console.log('Focusing infoRef');
         infoRef.current?.focus();
       }
     } else if (focusedGroupIndex === FILTERS_GROUP) {
-      console.log('Focusing filterRefs', filtersFocusedIndex);
       filterRefs.current[filtersFocusedIndex]?.focus();
     } else if (focusedGroupIndex === SWIMLANE_GROUP) {
-      console.log('Focusing cardRefs', swimlaneFocusedIndex);
       cardRefs.current[swimlaneFocusedIndex]?.focus();
     }
   }, [focusedGroupIndex, headerFocusedIndex, filtersFocusedIndex, swimlaneFocusedIndex]);

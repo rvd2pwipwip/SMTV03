@@ -136,6 +136,75 @@ When rendering your cards, you must:
 
 ---
 
+## Visual Diagram: Keyboard Event Flow
+
+```
+[User presses key]
+      |
+      v
+[Is focused element a native <button>?]
+      |                      \
+      |                       \
+     Yes                       No (custom card, e.g. ChannelCard)
+      |                         |
+      v                         v
+[Browser handles Enter/OK]   [KeyboardWrapper handles Enter/OK, Up, Down]
+[onKeyDown for up/down?]     [onUp/onDown call moveFocusUp/Down]
+      |                         |
+      v                         v
+[App navigation logic updates focused group/index]
+      |
+      v
+[Effect syncs DOM focus to new element]
+```
+
+---
+
+## Code Comparison: Native Button vs. Custom Card
+
+### Native Button (No KeyboardWrapper Needed)
+```jsx
+<Button
+  ref={el => { filterRefs.current[i] = el; }}
+  onClick={...} // Browser handles Enter/OK
+  onKeyDown={e => {
+    if (e.key === 'ArrowDown') moveFocusDown();
+    if (e.key === 'ArrowUp') moveFocusUp();
+  }}
+>
+  Filter
+</Button>
+```
+- **Enter/OK**: Handled by browser (activates button)
+- **Up/Down**: Handled by custom `onKeyDown` for navigation
+
+### Custom Card (Needs KeyboardWrapper)
+```jsx
+<KeyboardWrapper
+  onSelect={...} // Handles Enter/OK
+  onUp={moveFocusUp}
+  onDown={moveFocusDown}
+  ref={el => { cardRefs.current[i] = el; }}
+>
+  <ChannelCard
+    ...
+  />
+</KeyboardWrapper>
+```
+- **Enter/OK**: Handled by `KeyboardWrapper` (`onSelect`)
+- **Up/Down**: Handled by `KeyboardWrapper` (`onUp`/`onDown`)
+
+---
+
+## Summary Table
+
+| Element Type      | Needs KeyboardWrapper? | Enter/OK Handling         | Up/Down Handling         |
+|-------------------|:---------------------:|--------------------------|--------------------------|
+| ChannelCard (div) |        ✅             | KeyboardWrapper `onSelect`| KeyboardWrapper `onUp/Down`|
+| Button (native)   |        ❌             | Browser default           | Button `onKeyDown`       |
+
+---
+
 ## Further Reading
 - [React Refs and the DOM](https://react.dev/reference/react/useRef)
 - [React.forwardRef](https://react.dev/reference/react/forwardRef)
