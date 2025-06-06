@@ -67,6 +67,61 @@ React.useEffect(() => {
 
 ---
 
+## Follow-up Bug: Infinite Update Loop in ChannelInfo
+
+**Symptom:**
+- After fixing the setState-in-render error, a new error appeared:
+
+```
+Uncaught Error: Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.
+```
+
+**Root Cause:**
+- The `ChannelInfo` component was syncing local state from context memory (and vice versa) using `useEffect` hooks.
+- Each effect would update the other whenever their values changed, causing an infinite loop if the values were not perfectly in sync.
+- Example:
+  - Context changes → local state updates → local state changes → context updates → context changes → ...
+
+**Diagnosis:**
+- The effects did not check if the new value was actually different before calling the setter, so even identical values would trigger updates and re-renders.
+
+**Solution:**
+- Update both effects to only call their respective setters if the value is actually different.
+- This breaks the cycle and prevents unnecessary updates.
+
+**Example Fix:**
+```js
+// Sync local state from memory when it changes
+useEffect(() => {
+  if (
+    typeof screenMemory.lastFocusedGroupIndex === 'number' &&
+    screenMemory.lastFocusedItemIndices
+  ) {
+    if (focusedGroupIndex !== screenMemory.lastFocusedGroupIndex) {
+      setFocusedGroupIndex(screenMemory.lastFocusedGroupIndex);
+    }
+    if (actionsFocusedIndex !== (screenMemory.lastFocusedItemIndices[ACTIONS_GROUP] ?? 0)) {
+      setActionsFocusedIndex(screenMemory.lastFocusedItemIndices[ACTIONS_GROUP] ?? 0);
+    }
+    if (filtersFocusedIndex !== (screenMemory.lastFocusedItemIndices[FILTERS_GROUP] ?? 0)) {
+      setFiltersFocusedIndex(screenMemory.lastFocusedItemIndices[FILTERS_GROUP] ?? 0);
+    }
+    if (relatedFocusedIndex !== (screenMemory.lastFocusedItemIndices[RELATED_GROUP] ?? 0)) {
+      setRelatedFocusedIndex(screenMemory.lastFocusedItemIndices[RELATED_GROUP] ?? 0);
+    }
+  }
+}, [screenMemory, channelId]);
+
+// Sync context memory when focusedGroupIndex changes
+useEffect(() => {
+  if (screenMemory.lastFocusedGroupIndex !== focusedGroupIndex) {
+    setScreenField('lastFocusedGroupIndex', focusedGroupIndex);
+  }
+}, [focusedGroupIndex, setScreenField, screenMemory.lastFocusedGroupIndex]);
+```
+
+---
+
 ## Best Practices
 
 - **Never call state setters (or parent callbacks that trigger state) during render or mount unless inside a `useEffect` and only when truly necessary.**
@@ -74,6 +129,9 @@ React.useEffect(() => {
 - **For focus management:**
   - Let the parent be the source of truth for initial focus.
   - Only notify the parent of changes when the user actually changes focus.
+- **When syncing state between local and context/global state:**
+  - Only update if the new value is actually different from the current value.
+  - This prevents infinite update loops and unnecessary re-renders.
 
 ---
 
@@ -82,6 +140,7 @@ React.useEffect(() => {
 - React's strict rules about state updates during render are there to prevent unpredictable UI bugs.
 - TV app focus management requires careful separation of initial state, user-driven state, and effect-driven state.
 - Always review component effects and callback usage for possible side effects during mount.
+- When syncing state between local and context/global state, always check for actual value changes before updating to avoid infinite loops.
 
 ---
 
