@@ -46,7 +46,6 @@ function ChannelInfo() {
     filterTags = fakeChannelInfo[0].tags || [];
     // DEV NOTE: fallback to first channel's tags for stub data/dev purposes
   }
-  console.log('channelId:', channelId, 'channelInfo:', channelInfo, 'filterTags:', filterTags);
 
   // Persistent per-channel focus memory
   const { memory: screenMemory, setField: setScreenField } = useScreenMemory('channelinfo-' + channelId);
@@ -58,41 +57,34 @@ function ChannelInfo() {
 
   // --- Persistent focus memory ---
   // On first mount, restore last focused group/item if present
-  const [initialized, setInitialized] = useState(false);
   const [actionsFocusedIndex, setActionsFocusedIndex] = useState(0);
   const [filtersFocusedIndex, setFiltersFocusedIndex] = useState(0);
   const [relatedFocusedIndex, setRelatedFocusedIndex] = useState(0);
   const [focusedGroupIndex, setFocusedGroupIndex] = useState(ACTIONS_GROUP);
 
-  // Helper: get focused index for a group from memory
-  const getLastFocusedItemIndex = (groupIndex) => {
-    return screenMemory.lastFocusedItemIndices?.[groupIndex] ?? 0;
-  };
-
-  // On mount: restore focus from memory if available
+  // Initialize persistent memory if missing (runs only after mount)
   useEffect(() => {
-    if (!initialized) {
-      if (
-        typeof screenMemory.lastFocusedGroupIndex === 'number' &&
-        screenMemory.lastFocusedItemIndices
-      ) {
-        setFocusedGroupIndex(screenMemory.lastFocusedGroupIndex);
-        setActionsFocusedIndex(getLastFocusedItemIndex(ACTIONS_GROUP));
-        setFiltersFocusedIndex(getLastFocusedItemIndex(FILTERS_GROUP));
-        setRelatedFocusedIndex(getLastFocusedItemIndex(RELATED_GROUP));
-      } else {
-        // Default: focus Play button
-        setFocusedGroupIndex(ACTIONS_GROUP);
-        setActionsFocusedIndex(0);
-        setFiltersFocusedIndex(0);
-        setRelatedFocusedIndex(0);
-        setScreenField('lastFocusedGroupIndex', ACTIONS_GROUP);
-        setScreenField('lastFocusedItemIndices', { [ACTIONS_GROUP]: 0, [FILTERS_GROUP]: 0, [RELATED_GROUP]: 0 });
-      }
-      setInitialized(true);
+    if (
+      typeof screenMemory.lastFocusedGroupIndex !== 'number' ||
+      !screenMemory.lastFocusedItemIndices
+    ) {
+      setScreenField('lastFocusedGroupIndex', ACTIONS_GROUP);
+      setScreenField('lastFocusedItemIndices', { [ACTIONS_GROUP]: 0, [FILTERS_GROUP]: 0, [RELATED_GROUP]: 0 });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [screenMemory, initialized, channelId]);
+  }, [screenMemory.lastFocusedGroupIndex, screenMemory.lastFocusedItemIndices, setScreenField, channelId]);
+
+  // Sync local state from memory when it changes
+  useEffect(() => {
+    if (
+      typeof screenMemory.lastFocusedGroupIndex === 'number' &&
+      screenMemory.lastFocusedItemIndices
+    ) {
+      setFocusedGroupIndex(screenMemory.lastFocusedGroupIndex);
+      setActionsFocusedIndex(screenMemory.lastFocusedItemIndices[ACTIONS_GROUP] ?? 0);
+      setFiltersFocusedIndex(screenMemory.lastFocusedItemIndices[FILTERS_GROUP] ?? 0);
+      setRelatedFocusedIndex(screenMemory.lastFocusedItemIndices[RELATED_GROUP] ?? 0);
+    }
+  }, [screenMemory, channelId]);
 
   // --- Group navigation handlers ---
   // Move focus up/down and persist group index
