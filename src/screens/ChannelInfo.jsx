@@ -11,6 +11,7 @@ import VariableSwimlane from '../components/VariableSwimlane';
 import { useFocusNavigation } from '../contexts/GroupFocusNavigationContext';
 import { fakeChannels } from '../data/fakeChannels';
 import { useScreenMemory } from '../contexts/ScreenMemoryContext';
+import { fakeChannelInfo } from '../data/fakeChannelInfo';
 
 
 function ChannelInfo() {
@@ -33,12 +34,19 @@ function ChannelInfo() {
 
   // Get the channelId from the URL params and the state from the previous screen
   const { channelId } = useParams();
-  console.log('ChannelInfo loaded for channelId:', channelId);
   const location = useLocation();
   const { state } = location;
   const navigate = useNavigate();
 
   const channel = fakeChannels.find(c => String(c.id) === String(channelId));
+  const channelInfo = fakeChannelInfo.find(c => String(c.id) === String(channelId));
+  // Fallback: if no tags for this channel, use all unique tags from all channels
+  let filterTags = channelInfo?.tags || [];
+  if (!filterTags.length && fakeChannelInfo.length > 0) {
+    filterTags = fakeChannelInfo[0].tags || [];
+    // DEV NOTE: fallback to first channel's tags for stub data/dev purposes
+  }
+  console.log('channelId:', channelId, 'channelInfo:', channelInfo, 'filterTags:', filterTags);
 
   // Persistent per-channel focus memory
   const { memory: screenMemory, setField: setScreenField } = useScreenMemory('channelinfo-' + channelId);
@@ -262,41 +270,28 @@ function ChannelInfo() {
             </div>
             
             {/* Filter Buttons */}
-            <div
-              ref={filterGroupRef}
-              style={{ display: 'flex', gap: 16 }}
-            >
-              <KeyboardWrapper
-                ref={allRef}
-                data-stable-id="channelinfo-filter-all"
-              >
-                <Button variant="secondary" focused={focusedGroupIndex === FILTERS_GROUP && filtersFocusedIndex === 0} onFocus={() => handleFilterFocusChange(0)}>All</Button>
-              </KeyboardWrapper>
-              <KeyboardWrapper
-                ref={popularRef}
-                data-stable-id="channelinfo-filter-popular"
-              >
-                <Button variant="secondary" focused={focusedGroupIndex === FILTERS_GROUP && filtersFocusedIndex === 1} onFocus={() => handleFilterFocusChange(1)}>Popular</Button>
-              </KeyboardWrapper>
-              <KeyboardWrapper
-                ref={recommendedRef}
-                data-stable-id="channelinfo-filter-recommended"
-              >
-                <Button variant="secondary" focused={focusedGroupIndex === FILTERS_GROUP && filtersFocusedIndex === 2} onFocus={() => handleFilterFocusChange(2)}>Recommended</Button>
-              </KeyboardWrapper>
-              <KeyboardWrapper
-                ref={newRef}
-                data-stable-id="channelinfo-filter-new"
-              >
-                <Button variant="secondary" focused={focusedGroupIndex === FILTERS_GROUP && filtersFocusedIndex === 3} onFocus={() => handleFilterFocusChange(3)}>New</Button>
-              </KeyboardWrapper>
-              <KeyboardWrapper
-                ref={favoritesRef}
-                data-stable-id="channelinfo-filter-favorites"
-              >
-                <Button variant="secondary" focused={focusedGroupIndex === FILTERS_GROUP && filtersFocusedIndex === 4} onFocus={() => handleFilterFocusChange(4)}>Favorites</Button>
-              </KeyboardWrapper>
-            </div>
+            <VariableSwimlane
+              items={filterTags}
+              renderItem={(tag, i, isFocused) => (
+                <KeyboardWrapper
+                  key={tag.id}
+                  data-stable-id={`channelinfo-filter-${tag.id}`}
+                >
+                  <Button
+                    variant="secondary"
+                    focused={focusedGroupIndex === FILTERS_GROUP && filtersFocusedIndex === i}
+                    onFocus={() => handleFilterFocusChange(i)}
+                  >
+                    {tag.label}
+                  </Button>
+                </KeyboardWrapper>
+              )}
+              className="channelinfo-filter-swimlane"
+              width={"100%"}
+              focused={focusedGroupIndex === FILTERS_GROUP}
+              focusedIndex={filtersFocusedIndex}
+              onFocusChange={handleFilterFocusChange}
+            />
           </div>
         </div>
         
