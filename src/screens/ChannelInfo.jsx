@@ -10,6 +10,7 @@ import { getSidePadding } from '../utils/layout';
 import VariableSwimlane from '../components/VariableSwimlane';
 import { useFocusNavigation } from '../contexts/GroupFocusNavigationContext';
 import { fakeChannels } from '../data/fakeChannels';
+import { useScreenMemory } from '../contexts/ScreenMemoryContext';
 
 
 function ChannelInfo() {
@@ -39,37 +40,70 @@ function ChannelInfo() {
 
   const channel = fakeChannels.find(c => String(c.id) === String(channelId));
 
+  // Persistent per-channel focus memory
+  const { memory: screenMemory, setField: setScreenField } = useScreenMemory('channelinfo-' + channelId);
+
   // Define group indices for up/down navigation
   const ACTIONS_GROUP = 0;
   const FILTERS_GROUP = 1;
   const RELATED_GROUP = 2;
 
-  const {
-    focusedGroupIndex,
-    setFocusedGroupIndex,
-    moveFocusUp,
-    moveFocusDown,
-    getGroupFocusMemory,
-    setGroupFocusMemory
-  } = useFocusNavigation();
+  // --- Persistent focus memory ---
+  // On first mount, restore last focused group/item if present
+  const [initialized, setInitialized] = useState(false);
+  const [actionsFocusedIndex, setActionsFocusedIndex] = useState(0);
+  const [filtersFocusedIndex, setFiltersFocusedIndex] = useState(0);
+  const [relatedFocusedIndex, setRelatedFocusedIndex] = useState(0);
+  const [focusedGroupIndex, setFocusedGroupIndex] = useState(ACTIONS_GROUP);
 
+  // Helper: get focused index for a group from memory
+  const getLastFocusedItemIndex = (groupIndex) => {
+    return screenMemory.lastFocusedItemIndices?.[groupIndex] ?? 0;
+  };
+
+  // On mount: restore focus from memory if available
   useEffect(() => {
-    if (!state?.fromHome) {
-      setActionsFocusedIndex(0);
-      setGroupFocusMemory(ACTIONS_GROUP, { focusedIndex: 0 });
-      setFocusedGroupIndex(ACTIONS_GROUP);
+    if (!initialized) {
+      if (
+        typeof screenMemory.lastFocusedGroupIndex === 'number' &&
+        screenMemory.lastFocusedItemIndices
+      ) {
+        setFocusedGroupIndex(screenMemory.lastFocusedGroupIndex);
+        setActionsFocusedIndex(getLastFocusedItemIndex(ACTIONS_GROUP));
+        setFiltersFocusedIndex(getLastFocusedItemIndex(FILTERS_GROUP));
+        setRelatedFocusedIndex(getLastFocusedItemIndex(RELATED_GROUP));
+      } else {
+        // Default: focus Play button
+        setFocusedGroupIndex(ACTIONS_GROUP);
+        setActionsFocusedIndex(0);
+        setFiltersFocusedIndex(0);
+        setRelatedFocusedIndex(0);
+        setScreenField('lastFocusedGroupIndex', ACTIONS_GROUP);
+        setScreenField('lastFocusedItemIndices', { [ACTIONS_GROUP]: 0, [FILTERS_GROUP]: 0, [RELATED_GROUP]: 0 });
+      }
+      setInitialized(true);
     }
-  }, [state, channelId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screenMemory, initialized, channelId]);
 
-  const actionsMemory = getGroupFocusMemory(ACTIONS_GROUP);
-  const [actionsFocusedIndex, setActionsFocusedIndex] = useState(actionsMemory.focusedIndex ?? 0);
+  // --- Group navigation handlers ---
+  // Move focus up/down and persist group index
+  const moveFocusUp = () => {
+    setFocusedGroupIndex((prev) => {
+      const next = Math.max(prev - 1, 0);
+      setScreenField('lastFocusedGroupIndex', next);
+      return next;
+    });
+  };
+  const moveFocusDown = () => {
+    setFocusedGroupIndex((prev) => {
+      const next = Math.min(prev + 1, 2);
+      setScreenField('lastFocusedGroupIndex', next);
+      return next;
+    });
+  };
 
-  const filtersMemory = getGroupFocusMemory(FILTERS_GROUP);
-  const [filtersFocusedIndex, setFiltersFocusedIndex] = useState(filtersMemory.focusedIndex ?? 0);
-
-  const relatedMemory = getGroupFocusMemory(RELATED_GROUP);
-  const [relatedFocusedIndex, setRelatedFocusedIndex] = useState(relatedMemory.focusedIndex ?? 0);
-
+  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowDown') {
@@ -82,7 +116,40 @@ function ChannelInfo() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [moveFocusUp, moveFocusDown]);
+  }, []);
+
+  // --- Focused index change handlers ---
+  // When focused index changes, persist in memory
+  const handleActionFocusChange = (index) => {
+    setActionsFocusedIndex(index);
+    setScreenField('lastFocusedGroupIndex', ACTIONS_GROUP);
+    setScreenField('lastFocusedItemIndices', {
+      ...screenMemory.lastFocusedItemIndices,
+      [ACTIONS_GROUP]: index,
+      [FILTERS_GROUP]: filtersFocusedIndex,
+      [RELATED_GROUP]: relatedFocusedIndex,
+    });
+  };
+  const handleFilterFocusChange = (index) => {
+    setFiltersFocusedIndex(index);
+    setScreenField('lastFocusedGroupIndex', FILTERS_GROUP);
+    setScreenField('lastFocusedItemIndices', {
+      ...screenMemory.lastFocusedItemIndices,
+      [ACTIONS_GROUP]: actionsFocusedIndex,
+      [FILTERS_GROUP]: index,
+      [RELATED_GROUP]: relatedFocusedIndex,
+    });
+  };
+  const handleRelatedFocusChange = (index) => {
+    setRelatedFocusedIndex(index);
+    setScreenField('lastFocusedGroupIndex', RELATED_GROUP);
+    setScreenField('lastFocusedItemIndices', {
+      ...screenMemory.lastFocusedItemIndices,
+      [ACTIONS_GROUP]: actionsFocusedIndex,
+      [FILTERS_GROUP]: filtersFocusedIndex,
+      [RELATED_GROUP]: index,
+    });
+  };
 
   const handleChannelSelect = () => {
     console.log('Channel selected');
@@ -179,10 +246,7 @@ function ChannelInfo() {
               width={"100%"}
               focused={focusedGroupIndex === ACTIONS_GROUP}
               focusedIndex={actionsFocusedIndex}
-              onFocusChange={(index) => {
-                setActionsFocusedIndex(index);
-                setGroupFocusMemory(ACTIONS_GROUP, { focusedIndex: index });
-              }}
+              onFocusChange={handleActionFocusChange}
             />
             
             {/* Channel Description */}
@@ -206,31 +270,31 @@ function ChannelInfo() {
                 ref={allRef}
                 data-stable-id="channelinfo-filter-all"
               >
-                <Button variant="secondary">All</Button>
+                <Button variant="secondary" focused={focusedGroupIndex === FILTERS_GROUP && filtersFocusedIndex === 0} onFocus={() => handleFilterFocusChange(0)}>All</Button>
               </KeyboardWrapper>
               <KeyboardWrapper
                 ref={popularRef}
                 data-stable-id="channelinfo-filter-popular"
               >
-                <Button variant="secondary">Popular</Button>
+                <Button variant="secondary" focused={focusedGroupIndex === FILTERS_GROUP && filtersFocusedIndex === 1} onFocus={() => handleFilterFocusChange(1)}>Popular</Button>
               </KeyboardWrapper>
               <KeyboardWrapper
                 ref={recommendedRef}
                 data-stable-id="channelinfo-filter-recommended"
               >
-                <Button variant="secondary">Recommended</Button>
+                <Button variant="secondary" focused={focusedGroupIndex === FILTERS_GROUP && filtersFocusedIndex === 2} onFocus={() => handleFilterFocusChange(2)}>Recommended</Button>
               </KeyboardWrapper>
               <KeyboardWrapper
                 ref={newRef}
                 data-stable-id="channelinfo-filter-new"
               >
-                <Button variant="secondary">New</Button>
+                <Button variant="secondary" focused={focusedGroupIndex === FILTERS_GROUP && filtersFocusedIndex === 3} onFocus={() => handleFilterFocusChange(3)}>New</Button>
               </KeyboardWrapper>
               <KeyboardWrapper
                 ref={favoritesRef}
                 data-stable-id="channelinfo-filter-favorites"
               >
-                <Button variant="secondary">Favorites</Button>
+                <Button variant="secondary" focused={focusedGroupIndex === FILTERS_GROUP && filtersFocusedIndex === 4} onFocus={() => handleFilterFocusChange(4)}>Favorites</Button>
               </KeyboardWrapper>
             </div>
           </div>
@@ -260,6 +324,8 @@ function ChannelInfo() {
                 title="Sample Channel 1"    
                 thumbnailUrl="https://picsum.photos/300/300?1"
                 onSelect={handleChannelSelect} 
+                focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === 0}
+                onFocus={() => handleRelatedFocusChange(0)}
               />
             </KeyboardWrapper>
             <KeyboardWrapper
@@ -270,6 +336,8 @@ function ChannelInfo() {
                 title="Sample Channel 2"    
                 thumbnailUrl="https://picsum.photos/300/300?2"
                 onSelect={handleChannelSelect} 
+                focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === 1}
+                onFocus={() => handleRelatedFocusChange(1)}
               />
             </KeyboardWrapper>
             <KeyboardWrapper
@@ -280,6 +348,8 @@ function ChannelInfo() {
                 title="Sample Channel 3"    
                 thumbnailUrl="https://picsum.photos/300/300?3"
                 onSelect={handleChannelSelect} 
+                focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === 2}
+                onFocus={() => handleRelatedFocusChange(2)}
               />
             </KeyboardWrapper>
             <KeyboardWrapper
@@ -290,6 +360,8 @@ function ChannelInfo() {
                 title="Sample Channel 4"    
                 thumbnailUrl="https://picsum.photos/300/300?4"
                 onSelect={handleChannelSelect} 
+                focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === 3}
+                onFocus={() => handleRelatedFocusChange(3)}
               />
             </KeyboardWrapper>
             <KeyboardWrapper
@@ -300,6 +372,8 @@ function ChannelInfo() {
                 title="Sample Channel 5"    
                 thumbnailUrl="https://picsum.photos/300/300?5"
                 onSelect={handleChannelSelect} 
+                focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === 4}
+                onFocus={() => handleRelatedFocusChange(4)}
               />
             </KeyboardWrapper>
           </ChannelRow>
