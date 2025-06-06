@@ -177,9 +177,8 @@ export default function VariableSwimlane({
   React.useEffect(() => {
     if (typeof controlledFocusedIndex !== 'number') {
       setUncontrolledFocusedIndex(0);
-      // onFocusChange && onFocusChange(0);
     }
-  }, [items, focused, controlledFocusedIndex, onFocusChange]);
+  }, [items, focused, controlledFocusedIndex]);
 
   // --- Render ---
   return (

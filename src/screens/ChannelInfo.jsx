@@ -62,16 +62,20 @@ function ChannelInfo() {
   const [relatedFocusedIndex, setRelatedFocusedIndex] = useState(0);
   const [focusedGroupIndex, setFocusedGroupIndex] = useState(ACTIONS_GROUP);
 
+  const didInit = useRef(false);
+
   // Initialize persistent memory if missing (runs only after mount)
   useEffect(() => {
     if (
-      typeof screenMemory.lastFocusedGroupIndex !== 'number' ||
-      !screenMemory.lastFocusedItemIndices
+      !didInit.current &&
+      (typeof screenMemory.lastFocusedGroupIndex !== 'number' ||
+        !screenMemory.lastFocusedItemIndices)
     ) {
       setScreenField('lastFocusedGroupIndex', ACTIONS_GROUP);
       setScreenField('lastFocusedItemIndices', { [ACTIONS_GROUP]: 0, [FILTERS_GROUP]: 0, [RELATED_GROUP]: 0 });
+      didInit.current = true;
     }
-  }, [screenMemory.lastFocusedGroupIndex, screenMemory.lastFocusedItemIndices, setScreenField, channelId]);
+  }, [setScreenField, channelId]);
 
   // Sync local state from memory when it changes
   useEffect(() => {
@@ -79,28 +83,35 @@ function ChannelInfo() {
       typeof screenMemory.lastFocusedGroupIndex === 'number' &&
       screenMemory.lastFocusedItemIndices
     ) {
-      setFocusedGroupIndex(screenMemory.lastFocusedGroupIndex);
-      setActionsFocusedIndex(screenMemory.lastFocusedItemIndices[ACTIONS_GROUP] ?? 0);
-      setFiltersFocusedIndex(screenMemory.lastFocusedItemIndices[FILTERS_GROUP] ?? 0);
-      setRelatedFocusedIndex(screenMemory.lastFocusedItemIndices[RELATED_GROUP] ?? 0);
+      if (focusedGroupIndex !== screenMemory.lastFocusedGroupIndex) {
+        setFocusedGroupIndex(screenMemory.lastFocusedGroupIndex);
+      }
+      if (actionsFocusedIndex !== (screenMemory.lastFocusedItemIndices[ACTIONS_GROUP] ?? 0)) {
+        setActionsFocusedIndex(screenMemory.lastFocusedItemIndices[ACTIONS_GROUP] ?? 0);
+      }
+      if (filtersFocusedIndex !== (screenMemory.lastFocusedItemIndices[FILTERS_GROUP] ?? 0)) {
+        setFiltersFocusedIndex(screenMemory.lastFocusedItemIndices[FILTERS_GROUP] ?? 0);
+      }
+      if (relatedFocusedIndex !== (screenMemory.lastFocusedItemIndices[RELATED_GROUP] ?? 0)) {
+        setRelatedFocusedIndex(screenMemory.lastFocusedItemIndices[RELATED_GROUP] ?? 0);
+      }
     }
   }, [screenMemory, channelId]);
+
+  // Sync context memory when focusedGroupIndex changes
+  useEffect(() => {
+    if (screenMemory.lastFocusedGroupIndex !== focusedGroupIndex) {
+      setScreenField('lastFocusedGroupIndex', focusedGroupIndex);
+    }
+  }, [focusedGroupIndex, setScreenField, screenMemory.lastFocusedGroupIndex]);
 
   // --- Group navigation handlers ---
   // Move focus up/down and persist group index
   const moveFocusUp = () => {
-    setFocusedGroupIndex((prev) => {
-      const next = Math.max(prev - 1, 0);
-      setScreenField('lastFocusedGroupIndex', next);
-      return next;
-    });
+    setFocusedGroupIndex((prev) => Math.max(prev - 1, 0));
   };
   const moveFocusDown = () => {
-    setFocusedGroupIndex((prev) => {
-      const next = Math.min(prev + 1, 2);
-      setScreenField('lastFocusedGroupIndex', next);
-      return next;
-    });
+    setFocusedGroupIndex((prev) => Math.min(prev + 1, 2));
   };
 
   // Keyboard navigation
@@ -119,7 +130,7 @@ function ChannelInfo() {
   }, []);
 
   // --- Focused index change handlers ---
-  // When focused index changes, persist in memory
+  // These handlers should only be called in response to user navigation or focus events, never during render or mount.
   const handleActionFocusChange = (index) => {
     setActionsFocusedIndex(index);
     setScreenField('lastFocusedGroupIndex', ACTIONS_GROUP);

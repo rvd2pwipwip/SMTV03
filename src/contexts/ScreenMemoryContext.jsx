@@ -18,6 +18,7 @@ export function ScreenMemoryProvider({ children, ...props }) {
 
   // Helper to update memory for a screen
   const setScreenField = (screen, field, value) => {
+    // console.trace('setScreenField called', {screen, field, value});
     setScreenMemory(mem => ({
       ...mem,
       [screen]: { ...mem[screen], [field]: value }
