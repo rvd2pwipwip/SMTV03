@@ -8,7 +8,7 @@ import stingrayMusicLogo from '../assets/svg/stingrayMusic.svg';
 import { TRANS_BTN_ICON_SIZE } from '../constants/ui';
 import FixedSwimlane from '../components/FixedSwimlane';
 import { fakeChannels } from '../data/fakeChannels';
-import KeyboardWrapper from '../components/KeyboardWrapper';  
+import KeyboardWrapper from '../components/KeyboardWrapper';
 import VariableSwimlane from '../components/VariableSwimlane';
 import { tvHomeFilters } from '../data/tvHomeFilters';
 import { genreFilters } from '../data/genreFilters';
@@ -18,130 +18,73 @@ import { useScreenMemory } from '../contexts/ScreenMemoryContext';
 import { useNavigate } from 'react-router-dom';
 
 function Home() {
-  // Use persistent screen memory for activeFilterId
+  // Persistent screen memory for activeFilterId
   const { memory, setField } = useScreenMemory('home');
-  // Use memory.activeFilterId as the source of truth, fallback to first filter
   const activeFilterId = memory.activeFilterId || tvHomeFilters[0]?.id;
   const setActiveFilterId = (id) => setField('activeFilterId', id);
 
-  // Use plain refs for each card
-  const cardRefs = useRef([]);
+  // Refs for each group
   const searchRef = useRef(null);
   const infoRef = useRef(null);
+  const filterRefs = useRef([]); // For filter buttons
+  const cardRefs = useRef([]);   // For channel cards
 
-  // Use navigation context for vertical group focus
-  const { 
-    focusedGroupIndex, 
-    moveFocusUp, 
-    moveFocusDown, 
-    getGroupFocusMemory, 
-    setGroupFocusMemory 
+  // Navigation context for vertical group focus
+  const {
+    focusedGroupIndex,
+    moveFocusUp,
+    moveFocusDown,
+    getGroupFocusMemory,
+    setGroupFocusMemory
   } = useFocusNavigation();
 
-  // Define group indices for up/down navigation
+  console.log('Current focusedGroupIndex:', focusedGroupIndex);
+
+  // Group indices
   const HEADER_GROUP = 0;
   const FILTERS_GROUP = 1;
   const SWIMLANE_GROUP = 2;
 
-  // Get the last focused index for the filter group from context
+  // Header group focus
+  const [headerFocusedIndex, setHeaderFocusedIndex] = useState(0);
+
+  // Filters group focus
   const filtersMemory = getGroupFocusMemory(FILTERS_GROUP);
-  const [filtersFocusedIndex, setFiltersFocusedIndex] = useState(filtersMemory.focusedIndex);
+  const [filtersFocusedIndex, setFiltersFocusedIndex] = useState(filtersMemory.focusedIndex ?? 0);
+
+  // Swimlane group focus
+  const swimlaneMemory = getGroupFocusMemory(SWIMLANE_GROUP);
+  const [swimlaneFocusedIndex, setSwimlaneFocusedIndex] = useState(swimlaneMemory.focusedIndex ?? 0);
 
   const navigate = useNavigate();
 
   const handleChannelSelect = (channel) => {
-    console.log('Navigating to channel:', channel.id);
-    // Save focus memory if needed
     navigate(`/channel-info/${channel.id}`, {
-      state: {
-        fromHome: true,
-        // Add more state here if needed
-      }
+      state: { fromHome: true }
     });
   };
 
-  // When the group regains focus, restore the last focused index
-  useEffect(() => {
-    if (focusedGroupIndex === FILTERS_GROUP) {
-      setFiltersFocusedIndex(filtersMemory.focusedIndex);
-    }
-    // eslint-disable-next-line
-  }, [focusedGroupIndex]);
-
-  // Get the last focused index for the swimlane group from context
-  const swimlaneMemory = getGroupFocusMemory(SWIMLANE_GROUP);
-  const [swimlaneFocusedIndex, setSwimlaneFocusedIndex] = useState(swimlaneMemory.focusedIndex);
-
-  // When the group regains focus, restore the last focused index
-  useEffect(() => {
-    if (focusedGroupIndex === SWIMLANE_GROUP) {
-      setSwimlaneFocusedIndex(swimlaneMemory.focusedIndex);
-    }
-    // eslint-disable-next-line
-  }, [focusedGroupIndex]);
-
-  // Handle up/down keys to move between groups
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'ArrowDown') {
-        moveFocusDown();
-        e.preventDefault();
-      } else if (e.key === 'ArrowUp') {
-        moveFocusUp();
-        e.preventDefault();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [moveFocusUp, moveFocusDown]);
-
-  // Get the last focused index for the header group from context
-  const headerMemory = getGroupFocusMemory(HEADER_GROUP);
-  const [headerFocusedIndex, setHeaderFocusedIndex] = useState(headerMemory.focusedIndex ?? 0);
-  const [hasVisitedHeader, setHasVisitedHeader] = useState(false);
-
-  // When the header group regains focus, focus first child on first visit, else use memory
+  // Sync DOM focus with app focus for all groups
   useEffect(() => {
     if (focusedGroupIndex === HEADER_GROUP) {
-      if (!hasVisitedHeader) {
-        // First time: focus first child
+      if (headerFocusedIndex === 0) {
+        console.log('Focusing searchRef');
         searchRef.current?.focus();
-        setHeaderFocusedIndex(0);
-        setGroupFocusMemory(HEADER_GROUP, { focusedIndex: 0 });
-        setHasVisitedHeader(true);
-      } else {
-        // Subsequent times: focus last focused child
-        if (headerFocusedIndex === 0) {
-          searchRef.current?.focus();
-        } else if (headerFocusedIndex === 1) {
-          infoRef.current?.focus();
-        }
       }
-    }
-  }, [focusedGroupIndex, hasVisitedHeader, headerFocusedIndex, setGroupFocusMemory]);
-
-  useEffect(() => {
-    if (focusedGroupIndex !== HEADER_GROUP) return;
-  
-    const handleHeaderKeyDown = (e) => {
-      if (e.key === 'ArrowRight' && headerFocusedIndex === 0) {
-        setHeaderFocusedIndex(1);
-        setGroupFocusMemory(HEADER_GROUP, { focusedIndex: 1 });
+      if (headerFocusedIndex === 1) {
+        console.log('Focusing infoRef');
         infoRef.current?.focus();
-        e.preventDefault();
-      } else if (e.key === 'ArrowLeft' && headerFocusedIndex === 1) {
-        setHeaderFocusedIndex(0);
-        setGroupFocusMemory(HEADER_GROUP, { focusedIndex: 0 });
-        searchRef.current?.focus();
-        e.preventDefault();
       }
-    };
-  
-    window.addEventListener('keydown', handleHeaderKeyDown);
-    return () => window.removeEventListener('keydown', handleHeaderKeyDown);
-  }, [focusedGroupIndex, headerFocusedIndex, setGroupFocusMemory]);
+    } else if (focusedGroupIndex === FILTERS_GROUP) {
+      console.log('Focusing filterRefs', filtersFocusedIndex);
+      filterRefs.current[filtersFocusedIndex]?.focus();
+    } else if (focusedGroupIndex === SWIMLANE_GROUP) {
+      console.log('Focusing cardRefs', swimlaneFocusedIndex);
+      cardRefs.current[swimlaneFocusedIndex]?.focus();
+    }
+  }, [focusedGroupIndex, headerFocusedIndex, filtersFocusedIndex, swimlaneFocusedIndex]);
 
-  // Blur header buttons when leaving header group to remove focus ring
+  // Blur header buttons when leaving header group
   useEffect(() => {
     if (focusedGroupIndex !== HEADER_GROUP) {
       searchRef.current?.blur();
@@ -149,25 +92,13 @@ function Home() {
     }
   }, [focusedGroupIndex]);
 
-  // Ensures the DOM focus matches your app visual focus.
-  useEffect(() => {
-    if (
-      focusedGroupIndex === SWIMLANE_GROUP &&
-      cardRefs.current[swimlaneFocusedIndex]
-    ) {
-      cardRefs.current[swimlaneFocusedIndex].focus();
-    }
-  }, [swimlaneFocusedIndex, focusedGroupIndex]);
-
   return (
     <>
-      {/* Main navigation stack: header, filters, swimlane */}
       <div
         className="home-content"
         style={{
           display: 'flex',
           flexDirection: 'column',
-          // Use design token for vertical gap between main sections
           gap: 'var(--spacing-xxl)',
           height: `calc(100vh - 150px)`,
           width: '100%',
@@ -175,6 +106,7 @@ function Home() {
           alignItems: 'stretch',
         }}
       >
+        {/* Header group */}
         <div className="home-header" style={{ width: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--screen-side-padding) var(--screen-side-padding) 0 var(--screen-side-padding)', minHeight: 90, boxSizing: 'border-box' }}>
           <div style={{ width: 245, height: 70, display: 'flex', alignItems: 'center' }}>
             <img src={stingrayMusicLogo} alt="Stingray Music" style={{ width: '100%', height: '100%' }} />
@@ -193,6 +125,17 @@ function Home() {
                 setHeaderFocusedIndex(0);
                 setGroupFocusMemory(HEADER_GROUP, { focusedIndex: 0 });
               }}
+              onKeyDown={e => {
+                if (e.key === 'ArrowRight') {
+                  setHeaderFocusedIndex(1);
+                  setGroupFocusMemory(HEADER_GROUP, { focusedIndex: 1 });
+                  infoRef.current?.focus();
+                  e.preventDefault();
+                } else if (e.key === 'ArrowDown') {
+                  moveFocusDown();
+                  e.preventDefault();
+                }
+              }}
             />
             <Button
               ref={infoRef}
@@ -207,33 +150,53 @@ function Home() {
                 setHeaderFocusedIndex(1);
                 setGroupFocusMemory(HEADER_GROUP, { focusedIndex: 1 });
               }}
+              onKeyDown={e => {
+                if (e.key === 'ArrowLeft') {
+                  setHeaderFocusedIndex(0);
+                  setGroupFocusMemory(HEADER_GROUP, { focusedIndex: 0 });
+                  searchRef.current?.focus();
+                  e.preventDefault();
+                } else if (e.key === 'ArrowDown') {
+                  moveFocusDown();
+                  e.preventDefault();
+                }
+              }}
             />
           </div>
         </div>
-        {/*
-          VariableSwimlane for filter buttons.
-          - Uses Button.tsx (medium, secondary for all except active, which is medium primary)
-          - Focus ring is handled by Button component
-        */}
+
+        {/* Filters group */}
         <VariableSwimlane
           items={tvHomeFilters}
           renderItem={(filter, i, focused) => (
             <Button
+              ref={el => { filterRefs.current[i] = el; }}
               key={filter.id}
               variant={filter.id === activeFilterId ? 'primary' : 'secondary'}
               size="medium"
               focused={focused}
-              onClick={
-                () => setActiveFilterId(filter.id) 
-              }
+              onClick={() => setActiveFilterId(filter.id)}
               aria-label={filter.label}
+              onKeyDown={e => {
+                if (e.key === 'ArrowDown') {
+                  moveFocusDown();
+                  e.preventDefault();
+                } else if (e.key === 'ArrowUp') {
+                  moveFocusUp();
+                  e.preventDefault();
+                }
+              }}
             >
               {filter.label}
             </Button>
           )}
           focused={focusedGroupIndex === FILTERS_GROUP}
           focusedIndex={filtersFocusedIndex}
-          onSelect={(filter) => setActiveFilterId(filter.id)}
+          onSelect={(filter, i) => {
+            setActiveFilterId(filter.id);
+            setFiltersFocusedIndex(i);
+            setGroupFocusMemory(FILTERS_GROUP, { focusedIndex: i });
+          }}
           onFocusChange={(index) => {
             setFiltersFocusedIndex(index);
             setGroupFocusMemory(FILTERS_GROUP, { focusedIndex: index });
@@ -244,6 +207,7 @@ function Home() {
           activeIndex={tvHomeFilters.findIndex(f => f.id === activeFilterId)}
         />
 
+        {/* Swimlane group */}
         <FixedSwimlane
           items={fakeChannels}
           renderItem={(channel, i, focused) => (
@@ -251,10 +215,11 @@ function Home() {
               key={channel.id}
               onSelect={() => handleChannelSelect(channel)}
               selectData={channel}
-              ref={el => { cardRefs.current[i] = el; }} // <-- Pass ref to KeyboardWrapper
+              ref={el => { cardRefs.current[i] = el; }}
+              onUp={moveFocusUp}
+              onDown={moveFocusDown}
             >
               <ChannelCard
-                ref={el => { cardRefs.current[i] = el; }}
                 title={channel.title}
                 thumbnailUrl={channel.thumbnailUrl}
                 focused={focused}
@@ -274,7 +239,6 @@ function Home() {
           rightPadding={getSidePadding()}
         />
       </div>
-      
       {/* Ad banner is outside the navigation context and not focusable */}
       <AdBanner />
     </>
