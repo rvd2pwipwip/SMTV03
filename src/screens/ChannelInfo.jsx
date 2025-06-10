@@ -182,6 +182,15 @@ function ChannelInfo() {
                     variant={item.variant}
                     onClick={item.onClick}
                     focused={isFocused}
+                    onKeyDown={e => {
+                      if (e.key === 'ArrowDown') {
+                        moveFocusDown();
+                        e.preventDefault();
+                      } else if (e.key === 'ArrowUp') {
+                        moveFocusUp();
+                        e.preventDefault();
+                      }
+                    }}
                   >
                     {item.label}
                   </Button>
@@ -215,8 +224,16 @@ function ChannelInfo() {
                 <KeyboardWrapper key={tag.id} data-stable-id={`channelinfo-filter-${tag.id}`}>
                   <Button
                     variant="secondary"
-                    focused={focusedGroupIndex === FILTERS_GROUP && filtersFocusedIndex === i}
-                    onFocus={() => handleFilterFocusChange(i)}
+                    focused={isFocused}
+                    onKeyDown={e => {
+                      if (e.key === 'ArrowDown') {
+                        moveFocusDown();
+                        e.preventDefault();
+                      } else if (e.key === 'ArrowUp') {
+                        moveFocusUp();
+                        e.preventDefault();
+                      }
+                    }}
                   >
                     {tag.label}
                   </Button>
