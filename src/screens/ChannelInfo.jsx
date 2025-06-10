@@ -13,15 +13,8 @@ import { fakeChannelInfo } from '../data/fakeChannelInfo';
 
 function ChannelInfo() {
   // Use plain refs for focusable elements
-  const actionGroupRef = useRef(null);
   const playRef = useRef(null);
   const favRef = useRef(null);
-  const filterGroupRef = useRef(null);
-  const allRef = useRef(null);
-  const popularRef = useRef(null);
-  const recommendedRef = useRef(null);
-  const newRef = useRef(null);
-  const favoritesRef = useRef(null);
   const relatedGroupRef = useRef(null);
   const relatedCard1Ref = useRef(null);
   const relatedCard2Ref = useRef(null);
@@ -126,8 +119,8 @@ function ChannelInfo() {
           {/* Channel Thumbnail Placeholder */}
           <div
             style={{
-              width: 400,
-              height: 400,
+              width: 360,
+              height: 360,
               background: 'var(--color-outline-secondary)',
               borderRadius: 30,
               display: 'flex',
@@ -139,11 +132,11 @@ function ChannelInfo() {
               flexShrink: 0,
             }}
           >
-            400x400
+            360x360
           </div>
 
           {/* Channel Details Group */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 40, maxWidth: 900 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
             {/* Channel Title */}
             <h1
               style={{
@@ -207,7 +200,8 @@ function ChannelInfo() {
                 fontFamily: 'var(--font-family-primary)',
                 fontSize: 'var(--font-size-body)',
                 color: 'var(--color-text-secondary)',
-                maxWidth: 700,
+                maxWidth: '60ch',
+                minHeight: 150,
               }}
             >
               {channel?.description ||

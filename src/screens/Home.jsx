@@ -21,13 +21,13 @@ function Home() {
   // Persistent screen memory for activeFilterId
   const { memory, setField } = useScreenMemory('home');
   const activeFilterId = memory.activeFilterId || tvHomeFilters[0]?.id;
-  const setActiveFilterId = (id) => setField('activeFilterId', id);
+  const setActiveFilterId = id => setField('activeFilterId', id);
 
   // Refs for each group
   const searchRef = useRef(null);
   const infoRef = useRef(null);
   const filterRefs = useRef([]); // For filter buttons
-  const cardRefs = useRef([]);   // For channel cards
+  const cardRefs = useRef([]); // For channel cards
 
   // Navigation context for vertical group focus
   const {
@@ -35,7 +35,7 @@ function Home() {
     moveFocusUp,
     moveFocusDown,
     getGroupFocusMemory,
-    setGroupFocusMemory
+    setGroupFocusMemory,
   } = useFocusNavigation();
 
   // Group indices
@@ -52,13 +52,15 @@ function Home() {
 
   // Swimlane group focus
   const swimlaneMemory = getGroupFocusMemory(SWIMLANE_GROUP);
-  const [swimlaneFocusedIndex, setSwimlaneFocusedIndex] = useState(swimlaneMemory.focusedIndex ?? 0);
+  const [swimlaneFocusedIndex, setSwimlaneFocusedIndex] = useState(
+    swimlaneMemory.focusedIndex ?? 0
+  );
 
   const navigate = useNavigate();
 
-  const handleChannelSelect = (channel) => {
+  const handleChannelSelect = channel => {
     navigate(`/channel-info/${channel.id}`, {
-      state: { fromHome: true }
+      state: { fromHome: true },
     });
   };
 
@@ -101,9 +103,26 @@ function Home() {
         }}
       >
         {/* Header group */}
-        <div className="home-header" style={{ width: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--screen-side-padding) var(--screen-side-padding) 0 var(--screen-side-padding)', minHeight: 90, boxSizing: 'border-box' }}>
+        <div
+          className="home-header"
+          style={{
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding:
+              'var(--screen-side-padding) var(--screen-side-padding) 0 var(--screen-side-padding)',
+            minHeight: 90,
+            boxSizing: 'border-box',
+          }}
+        >
           <div style={{ width: 245, height: 70, display: 'flex', alignItems: 'center' }}>
-            <img src={stingrayMusicLogo} alt="Stingray Music" style={{ width: '100%', height: '100%' }} />
+            <img
+              src={stingrayMusicLogo}
+              alt="Stingray Music"
+              style={{ width: '100%', height: '100%' }}
+            />
           </div>
           <div style={{ display: 'flex', flexDirection: 'row', gap: 24, alignItems: 'center' }}>
             <Button
@@ -162,9 +181,12 @@ function Home() {
         {/* Filters group */}
         <VariableSwimlane
           items={tvHomeFilters}
+          // items={genreFilters}
           renderItem={(filter, i, focused) => (
             <Button
-              ref={el => { filterRefs.current[i] = el; }}
+              ref={el => {
+                filterRefs.current[i] = el;
+              }}
               key={filter.id}
               variant={filter.id === activeFilterId ? 'primary' : 'secondary'}
               size="medium"
@@ -191,7 +213,7 @@ function Home() {
             setFiltersFocusedIndex(i);
             setGroupFocusMemory(FILTERS_GROUP, { focusedIndex: i });
           }}
-          onFocusChange={(index) => {
+          onFocusChange={index => {
             setFiltersFocusedIndex(index);
             setGroupFocusMemory(FILTERS_GROUP, { focusedIndex: index });
           }}
@@ -209,7 +231,9 @@ function Home() {
               key={channel.id}
               onSelect={() => handleChannelSelect(channel)}
               selectData={channel}
-              ref={el => { cardRefs.current[i] = el; }}
+              ref={el => {
+                cardRefs.current[i] = el;
+              }}
               onUp={moveFocusUp}
               onDown={moveFocusDown}
             >
@@ -225,7 +249,7 @@ function Home() {
           fallbackItem={<div>No channels available</div>}
           focused={focusedGroupIndex === SWIMLANE_GROUP}
           focusedIndex={swimlaneFocusedIndex}
-          onFocusChange={(index) => {
+          onFocusChange={index => {
             setSwimlaneFocusedIndex(index);
             setGroupFocusMemory(SWIMLANE_GROUP, { focusedIndex: index });
           }}
