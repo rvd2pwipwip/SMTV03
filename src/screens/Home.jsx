@@ -47,9 +47,30 @@ function Home() {
   // Header group focus
   const [headerFocusedIndex, setHeaderFocusedIndex] = useState(0);
 
-  // Filters group focus
+  // UX DESIGN PATTERN: Initial Focus vs Navigation Memory
+  // When users return to this screen, we want them to start at their active filter selection
+  // rather than where they last navigated horizontally. This creates a more predictable
+  // and content-oriented experience. However, once they start navigating horizontally
+  // within the current session, we remember their navigation for smoother interaction.
+
+  // Track whether user has navigated horizontally within filters during this session
+  const [hasNavigatedFiltersHorizontally, setHasNavigatedFiltersHorizontally] = useState(false);
+
+  // Calculate the index of the currently active filter for initial positioning
+  const activeFilterIndex = genreFilters.findIndex(f => f.id === activeFilterId);
+  const safeActiveFilterIndex = activeFilterIndex >= 0 ? activeFilterIndex : 0;
+
+  // Filters group focus - UX LOGIC:
+  // On mount: Start at active filter (content-based positioning)
+  // After horizontal nav: Use focus memory (interaction-based positioning)
   const filtersMemory = getGroupFocusMemory(FILTERS_GROUP);
-  const [filtersFocusedIndex, setFiltersFocusedIndex] = useState(filtersMemory.focusedIndex ?? 0);
+  const [filtersFocusedIndex, setFiltersFocusedIndex] = useState(
+    // UX PRINCIPLE: Content context over navigation memory on fresh loads
+    // Users expect to see their active selection highlighted when returning to a screen
+    hasNavigatedFiltersHorizontally
+      ? (filtersMemory.focusedIndex ?? safeActiveFilterIndex)
+      : safeActiveFilterIndex
+  );
 
   // Swimlane group focus
   const swimlaneMemory = getGroupFocusMemory(SWIMLANE_GROUP);
@@ -63,6 +84,19 @@ function Home() {
     navigate(`/channel-info/${channel.id}`, {
       state: { fromHome: true },
     });
+  };
+
+  // UX ENHANCEMENT: Handle horizontal navigation state tracking
+  // This function is called when users navigate left/right within filters
+  const handleFilterHorizontalNavigation = newIndex => {
+    setFiltersFocusedIndex(newIndex);
+    setGroupFocusMemory(FILTERS_GROUP, { focusedIndex: newIndex });
+
+    // UX STATE TRANSITION: Mark that user has started horizontal navigation
+    // From this point forward, focus memory takes precedence over active filter positioning
+    if (!hasNavigatedFiltersHorizontally) {
+      setHasNavigatedFiltersHorizontally(true);
+    }
   };
 
   // Sync DOM focus with app focus for all groups
@@ -202,6 +236,8 @@ function Home() {
                   moveFocusUp();
                   e.preventDefault();
                 }
+                // UX NOTE: Horizontal navigation within filters is handled by VariableSwimlane
+                // The swimlane component manages left/right arrow keys and calls our onFocusChange
               }}
             >
               {filter.label}
@@ -211,18 +247,24 @@ function Home() {
           focusedIndex={filtersFocusedIndex}
           onSelect={(filter, i) => {
             setActiveFilterId(filter.id);
-            setFiltersFocusedIndex(i);
-            setGroupFocusMemory(FILTERS_GROUP, { focusedIndex: i });
+            // UX LOGIC: When user selects a filter, update focus tracking
+            // This maintains the selected filter as the new reference point
+            handleFilterHorizontalNavigation(i);
           }}
           onFocusChange={index => {
-            setFiltersFocusedIndex(index);
-            setGroupFocusMemory(FILTERS_GROUP, { focusedIndex: index });
+            // UX BEHAVIOR: This is called when user navigates horizontally with arrow keys
+            // We use our tracking function to remember this is now navigation-driven focus
+            handleFilterHorizontalNavigation(index);
           }}
           leftPadding={getSidePadding()}
           rightPadding={getSidePadding()}
           ensureActiveVisible={true}
-          activeIndex={tvHomeFilters.findIndex(f => f.id === activeFilterId)}
+          // UX FIX: Use correct data source for activeIndex calculation
+          // Previously used tvHomeFilters but we're actually rendering genreFilters
+          activeIndex={genreFilters.findIndex(f => f.id === activeFilterId)}
         />
+
+        {/* UX PATTERN: Filter navigation balances content context with navigation memory */}
 
         {/* Swimlane group */}
         <FixedSwimlane
