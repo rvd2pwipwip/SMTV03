@@ -20,7 +20,8 @@ import { useNavigate } from 'react-router-dom';
 function Home() {
   // Persistent screen memory for activeFilterId
   const { memory, setField } = useScreenMemory('home');
-  const activeFilterId = memory.activeFilterId || tvHomeFilters[0]?.id;
+  // const activeFilterId = memory.activeFilterId || tvHomeFilters[0]?.id;
+  const activeFilterId = memory.activeFilterId || genreFilters[0]?.id;
   const setActiveFilterId = id => setField('activeFilterId', id);
 
   // Refs for each group
@@ -180,8 +181,8 @@ function Home() {
 
         {/* Filters group */}
         <VariableSwimlane
-          items={tvHomeFilters}
-          // items={genreFilters}
+          // items={tvHomeFilters}
+          items={genreFilters}
           renderItem={(filter, i, focused) => (
             <Button
               ref={el => {
