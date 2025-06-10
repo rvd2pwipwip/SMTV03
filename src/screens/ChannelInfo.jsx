@@ -8,11 +8,8 @@ import { Like, SingNow } from 'stingray-icons';
 import AdBanner from '../components/AdBanner';
 import { getSidePadding } from '../utils/layout';
 import VariableSwimlane from '../components/VariableSwimlane';
-import { useFocusNavigation } from '../contexts/GroupFocusNavigationContext';
 import { fakeChannels } from '../data/fakeChannels';
-import { useScreenMemory } from '../contexts/ScreenMemoryContext';
 import { fakeChannelInfo } from '../data/fakeChannelInfo';
-
 
 function ChannelInfo() {
   // Use plain refs for focusable elements
@@ -47,76 +44,29 @@ function ChannelInfo() {
     // DEV NOTE: fallback to first channel's tags for stub data/dev purposes
   }
 
-  // Persistent per-channel focus memory
-  const { memory: screenMemory, setField: setScreenField } = useScreenMemory('channelinfo-' + channelId);
-
   // Define group indices for up/down navigation
   const ACTIONS_GROUP = 0;
   const FILTERS_GROUP = 1;
   const RELATED_GROUP = 2;
 
-  // --- Persistent focus memory ---
-  // On first mount, restore last focused group/item if present
+  // Simple focus state - always starts with Play button focused
   const [actionsFocusedIndex, setActionsFocusedIndex] = useState(0);
   const [filtersFocusedIndex, setFiltersFocusedIndex] = useState(0);
   const [relatedFocusedIndex, setRelatedFocusedIndex] = useState(0);
   const [focusedGroupIndex, setFocusedGroupIndex] = useState(ACTIONS_GROUP);
 
-  const didInit = useRef(false);
-
-  // Initialize persistent memory if missing (runs only after mount)
-  useEffect(() => {
-    if (
-      !didInit.current &&
-      (typeof screenMemory.lastFocusedGroupIndex !== 'number' ||
-        !screenMemory.lastFocusedItemIndices)
-    ) {
-      setScreenField('lastFocusedGroupIndex', ACTIONS_GROUP);
-      setScreenField('lastFocusedItemIndices', { [ACTIONS_GROUP]: 0, [FILTERS_GROUP]: 0, [RELATED_GROUP]: 0 });
-      didInit.current = true;
-    }
-  }, [setScreenField, channelId]);
-
-  // Sync local state from memory when it changes
-  useEffect(() => {
-    if (
-      typeof screenMemory.lastFocusedGroupIndex === 'number' &&
-      screenMemory.lastFocusedItemIndices
-    ) {
-      if (focusedGroupIndex !== screenMemory.lastFocusedGroupIndex) {
-        setFocusedGroupIndex(screenMemory.lastFocusedGroupIndex);
-      }
-      if (actionsFocusedIndex !== (screenMemory.lastFocusedItemIndices[ACTIONS_GROUP] ?? 0)) {
-        setActionsFocusedIndex(screenMemory.lastFocusedItemIndices[ACTIONS_GROUP] ?? 0);
-      }
-      if (filtersFocusedIndex !== (screenMemory.lastFocusedItemIndices[FILTERS_GROUP] ?? 0)) {
-        setFiltersFocusedIndex(screenMemory.lastFocusedItemIndices[FILTERS_GROUP] ?? 0);
-      }
-      if (relatedFocusedIndex !== (screenMemory.lastFocusedItemIndices[RELATED_GROUP] ?? 0)) {
-        setRelatedFocusedIndex(screenMemory.lastFocusedItemIndices[RELATED_GROUP] ?? 0);
-      }
-    }
-  }, [screenMemory, channelId]);
-
-  // Sync context memory when focusedGroupIndex changes
-  useEffect(() => {
-    if (screenMemory.lastFocusedGroupIndex !== focusedGroupIndex) {
-      setScreenField('lastFocusedGroupIndex', focusedGroupIndex);
-    }
-  }, [focusedGroupIndex, setScreenField, screenMemory.lastFocusedGroupIndex]);
-
   // --- Group navigation handlers ---
-  // Move focus up/down and persist group index
+  // Move focus up/down between groups
   const moveFocusUp = () => {
-    setFocusedGroupIndex((prev) => Math.max(prev - 1, 0));
+    setFocusedGroupIndex(prev => Math.max(prev - 1, 0));
   };
   const moveFocusDown = () => {
-    setFocusedGroupIndex((prev) => Math.min(prev + 1, 2));
+    setFocusedGroupIndex(prev => Math.min(prev + 1, 2));
   };
 
   // Keyboard navigation
   useEffect(() => {
-    const handleKeyDown = (e) => {
+    const handleKeyDown = e => {
       if (e.key === 'ArrowDown') {
         moveFocusDown();
         e.preventDefault();
@@ -129,37 +79,20 @@ function ChannelInfo() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // --- Focused index change handlers ---
-  // These handlers should only be called in response to user navigation or focus events, never during render or mount.
-  const handleActionFocusChange = (index) => {
+  // --- Simple focus change handlers ---
+  const handleActionFocusChange = index => {
     setActionsFocusedIndex(index);
-    setScreenField('lastFocusedGroupIndex', ACTIONS_GROUP);
-    setScreenField('lastFocusedItemIndices', {
-      ...screenMemory.lastFocusedItemIndices,
-      [ACTIONS_GROUP]: index,
-      [FILTERS_GROUP]: filtersFocusedIndex,
-      [RELATED_GROUP]: relatedFocusedIndex,
-    });
+    setFocusedGroupIndex(ACTIONS_GROUP);
   };
-  const handleFilterFocusChange = (index) => {
+
+  const handleFilterFocusChange = index => {
     setFiltersFocusedIndex(index);
-    setScreenField('lastFocusedGroupIndex', FILTERS_GROUP);
-    setScreenField('lastFocusedItemIndices', {
-      ...screenMemory.lastFocusedItemIndices,
-      [ACTIONS_GROUP]: actionsFocusedIndex,
-      [FILTERS_GROUP]: index,
-      [RELATED_GROUP]: relatedFocusedIndex,
-    });
+    setFocusedGroupIndex(FILTERS_GROUP);
   };
-  const handleRelatedFocusChange = (index) => {
+
+  const handleRelatedFocusChange = index => {
     setRelatedFocusedIndex(index);
-    setScreenField('lastFocusedGroupIndex', RELATED_GROUP);
-    setScreenField('lastFocusedItemIndices', {
-      ...screenMemory.lastFocusedItemIndices,
-      [ACTIONS_GROUP]: actionsFocusedIndex,
-      [FILTERS_GROUP]: filtersFocusedIndex,
-      [RELATED_GROUP]: index,
-    });
+    setFocusedGroupIndex(RELATED_GROUP);
   };
 
   const handleChannelSelect = () => {
@@ -168,16 +101,28 @@ function ChannelInfo() {
 
   return (
     <>
-      <div style={{ 
-        width: '100%', 
-        boxSizing: 'border-box', 
-        padding: `${getSidePadding()}px`, 
-        display: 'flex', 
-        flexDirection: 'column', 
-        gap: 15, 
-        position: 'relative' 
-      }}>
-        <div style={{ display: 'flex', flexDirection: 'row', gap: 40, width: '100%', boxSizing: 'border-box', paddingLeft: 0, paddingRight: 0 }}>
+      <div
+        style={{
+          width: '100%',
+          boxSizing: 'border-box',
+          padding: `${getSidePadding()}px`,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 15,
+          position: 'relative',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            gap: 40,
+            width: '100%',
+            boxSizing: 'border-box',
+            paddingLeft: 0,
+            paddingRight: 0,
+          }}
+        >
           {/* Channel Thumbnail Placeholder */}
           <div
             style={{
@@ -209,16 +154,16 @@ function ChannelInfo() {
                 margin: 0,
               }}
             >
-              {channel?.title || "Sample Channel Title"}
+              {channel?.title || 'Sample Channel Title'}
             </h1>
-            
+
             {/* Action Buttons */}
             <VariableSwimlane
               items={[
                 {
                   id: 'play',
                   label: 'Play',
-                  icon: <SingNow />, 
+                  icon: <SingNow />,
                   variant: 'primary',
                   ref: playRef,
                   onClick: () => {
@@ -229,37 +174,33 @@ function ChannelInfo() {
                 {
                   id: 'fav',
                   label: 'Add to Favorites',
-                  icon: <Like />, 
+                  icon: <Like />,
                   variant: 'secondary',
                   ref: favRef,
                   dataStableId: 'channelinfo-action-fav',
                 },
               ]}
               renderItem={(item, i, isFocused) => (
-                <KeyboardWrapper
-                  ref={item.ref}
-                  data-stable-id={item.dataStableId}
-                  key={item.id}
-                >
+                <KeyboardWrapper ref={item.ref} data-stable-id={item.dataStableId} key={item.id}>
                   <Button
                     icon={item.icon}
                     showIcon
                     size="medium"
                     variant={item.variant}
                     onClick={item.onClick}
-                    focused={isFocused} 
+                    focused={isFocused}
                   >
                     {item.label}
                   </Button>
                 </KeyboardWrapper>
               )}
               className="channelinfo-action-swimlane"
-              width={"100%"}
+              width={'100%'}
               focused={focusedGroupIndex === ACTIONS_GROUP}
               focusedIndex={actionsFocusedIndex}
               onFocusChange={handleActionFocusChange}
             />
-            
+
             {/* Channel Description */}
             <div
               style={{
@@ -269,17 +210,15 @@ function ChannelInfo() {
                 maxWidth: 700,
               }}
             >
-              {channel?.description || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque euismod, urna eu tincidunt consectetur, nisi nisl aliquam nunc, eget aliquam massa nisl quis neque."}
+              {channel?.description ||
+                'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque euismod, urna eu tincidunt consectetur, nisi nisl aliquam nunc, eget aliquam massa nisl quis neque.'}
             </div>
-            
+
             {/* Filter Buttons */}
             <VariableSwimlane
               items={filterTags}
               renderItem={(tag, i, isFocused) => (
-                <KeyboardWrapper
-                  key={tag.id}
-                  data-stable-id={`channelinfo-filter-${tag.id}`}
-                >
+                <KeyboardWrapper key={tag.id} data-stable-id={`channelinfo-filter-${tag.id}`}>
                   <Button
                     variant="secondary"
                     focused={focusedGroupIndex === FILTERS_GROUP && filtersFocusedIndex === i}
@@ -290,16 +229,24 @@ function ChannelInfo() {
                 </KeyboardWrapper>
               )}
               className="channelinfo-filter-swimlane"
-              width={"100%"}
+              width={'100%'}
               focused={focusedGroupIndex === FILTERS_GROUP}
               focusedIndex={filtersFocusedIndex}
               onFocusChange={handleFilterFocusChange}
             />
           </div>
         </div>
-        
+
         {/* Related Channels */}
-        <div style={{ width: '100%', boxSizing: 'border-box', paddingLeft: 0, paddingRight: 0, marginTop: 90 }}>
+        <div
+          style={{
+            width: '100%',
+            boxSizing: 'border-box',
+            paddingLeft: 0,
+            paddingRight: 0,
+            marginTop: 90,
+          }}
+        >
           <div
             style={{
               fontFamily: 'var(--font-family-secondary)',
@@ -311,65 +258,48 @@ function ChannelInfo() {
           >
             Related
           </div>
-          <ChannelRow
-            ref={relatedGroupRef}
-          >
-            <KeyboardWrapper
-              ref={relatedCard1Ref}
-              data-stable-id="channelinfo-related-card-1"
-            >
-              <ChannelCard 
-                title="Sample Channel 1"    
+          <ChannelRow ref={relatedGroupRef}>
+            <KeyboardWrapper ref={relatedCard1Ref} data-stable-id="channelinfo-related-card-1">
+              <ChannelCard
+                title="Sample Channel 1"
                 thumbnailUrl="https://picsum.photos/300/300?1"
-                onSelect={handleChannelSelect} 
+                onSelect={handleChannelSelect}
                 focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === 0}
                 onFocus={() => handleRelatedFocusChange(0)}
               />
             </KeyboardWrapper>
-            <KeyboardWrapper
-              ref={relatedCard2Ref}
-              data-stable-id="channelinfo-related-card-2"
-            >
-              <ChannelCard 
-                title="Sample Channel 2"    
+            <KeyboardWrapper ref={relatedCard2Ref} data-stable-id="channelinfo-related-card-2">
+              <ChannelCard
+                title="Sample Channel 2"
                 thumbnailUrl="https://picsum.photos/300/300?2"
-                onSelect={handleChannelSelect} 
+                onSelect={handleChannelSelect}
                 focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === 1}
                 onFocus={() => handleRelatedFocusChange(1)}
               />
             </KeyboardWrapper>
-            <KeyboardWrapper
-              ref={relatedCard3Ref}
-              data-stable-id="channelinfo-related-card-3"
-            >
-              <ChannelCard 
-                title="Sample Channel 3"    
+            <KeyboardWrapper ref={relatedCard3Ref} data-stable-id="channelinfo-related-card-3">
+              <ChannelCard
+                title="Sample Channel 3"
                 thumbnailUrl="https://picsum.photos/300/300?3"
-                onSelect={handleChannelSelect} 
+                onSelect={handleChannelSelect}
                 focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === 2}
                 onFocus={() => handleRelatedFocusChange(2)}
               />
             </KeyboardWrapper>
-            <KeyboardWrapper
-              ref={relatedCard4Ref}
-              data-stable-id="channelinfo-related-card-4"
-            >
-              <ChannelCard 
-                title="Sample Channel 4"    
+            <KeyboardWrapper ref={relatedCard4Ref} data-stable-id="channelinfo-related-card-4">
+              <ChannelCard
+                title="Sample Channel 4"
                 thumbnailUrl="https://picsum.photos/300/300?4"
-                onSelect={handleChannelSelect} 
+                onSelect={handleChannelSelect}
                 focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === 3}
                 onFocus={() => handleRelatedFocusChange(3)}
               />
             </KeyboardWrapper>
-            <KeyboardWrapper
-              ref={relatedCard5Ref}
-              data-stable-id="channelinfo-related-card-5"
-            >
-              <ChannelCard 
-                title="Sample Channel 5"    
+            <KeyboardWrapper ref={relatedCard5Ref} data-stable-id="channelinfo-related-card-5">
+              <ChannelCard
+                title="Sample Channel 5"
                 thumbnailUrl="https://picsum.photos/300/300?5"
-                onSelect={handleChannelSelect} 
+                onSelect={handleChannelSelect}
                 focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === 4}
                 onFocus={() => handleRelatedFocusChange(4)}
               />
