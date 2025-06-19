@@ -108,18 +108,48 @@ function ChannelInfo() {
           position: 'relative',
         }}
       >
+        {/* 
+          LEARNING: CSS Grid vs Flexbox for Layout Structure
+          
+          Why Grid is Better Here:
+          - This is a LAYOUT-DRIVEN design: fixed thumbnail (360px) + flexible content area
+          - Grid explicitly defines column sizes, eliminating width calculation ambiguity
+          - Children automatically respect grid cell boundaries (no width: 100% issues)
+          - More predictable and maintainable than flex + manual width constraints
+          
+          Grid Syntax Explained:
+          - display: 'grid' → Creates grid container
+          - gridTemplateColumns: '360px 1fr' → Column 1: 360px fixed, Column 2: remaining space
+          - gap: 40 → Spacing between grid items (replaces margin/padding calculations)
+          - alignItems: 'start' → Align items to top of their grid cells
+          
+          Compare to Previous Flexbox Issues:
+          - Flexbox: Children could reference wrong containing block for width calculations
+          - Flexbox: Needed complex minWidth: 0, maxWidth: 100% constraints to prevent overflow
+          - Grid: Children naturally contained within their grid cell - no constraints needed
+        */}
         <div
           className="channelinfo-header"
           style={{
-            display: 'flex',
-            flexDirection: 'row',
+            display: 'grid',
+            gridTemplateColumns: '360px 1fr', // Fixed thumbnail + flexible content
             gap: 40,
             width: '100%',
             boxSizing: 'border-box',
+            alignItems: 'start', // Align to top (vs center default)
             paddingLeft: 0,
             paddingRight: 0,
           }}
         >
+          {/* 
+            LEARNING: Grid Item Behavior
+            
+            With CSS Grid:
+            - This div automatically goes into the first grid column (360px)
+            - No need for flexShrink: 0 (was needed in flexbox to prevent shrinking)
+            - Grid cell defines the available space, so width: 360 is just for the element itself
+            - Grid eliminates the need for manual flex item controls
+          */}
           {/* Channel Thumbnail Placeholder */}
           <div
             style={{
@@ -133,22 +163,38 @@ function ChannelInfo() {
               color: '#888',
               fontSize: 32,
               fontFamily: 'var(--font-family-primary)',
-              flexShrink: 0,
+              // flexShrink: 0, ← No longer needed with Grid!
             }}
           >
             360x360
           </div>
 
+          {/* 
+            LEARNING: Grid Cell + Flexbox Combination
+            
+            Best of Both Worlds:
+            - Grid handles the LAYOUT structure (thumbnail + content columns)
+            - Flexbox handles the CONTENT flow within the grid cell (vertical stacking)
+            
+            Grid Cell Behavior:
+            - This div automatically goes into the second grid column (1fr = remaining space)
+            - minWidth: 0 still helpful for text overflow scenarios
+            - No need for flex: 1, maxWidth: 100%, boxSizing: border-box from flexbox approach
+            - Children naturally respect the grid cell boundaries (no more 2497.5px overflow!)
+            
+            When to Use Grid vs Flexbox:
+            - Grid: Known layout structure, explicit sizing relationships
+            - Flexbox: Unknown content sizes, dynamic arrangements
+            - Combined: Grid for page layout, Flexbox for content flow (like here)
+          */}
           {/* Channel Details Group */}
           <div
             className="channelinfo-details-group"
             style={{
-              flex: 1,
               display: 'flex',
               flexDirection: 'column',
               gap: 40,
-              minWidth: 0,
-              boxSizing: 'border-box',
+              minWidth: 0, // Still helpful for text overflow
             }}
           >
             {/* Channel Title */}
@@ -159,9 +205,6 @@ function ChannelInfo() {
                 fontWeight: 'var(--font-weight-bold)',
                 color: 'var(--color-text-primary)',
                 margin: 0,
-                minWidth: 0,
-                maxWidth: '100%',
-                boxSizing: 'border-box',
               }}
             >
               {channel?.title || 'Sample Channel Title'}
@@ -227,9 +270,7 @@ function ChannelInfo() {
                 fontSize: 'var(--font-size-body)',
                 color: 'var(--color-text-secondary)',
                 minHeight: 150,
-                minWidth: 0,
-                maxWidth: '100%',
-                boxSizing: 'border-box',
+                maxWidth: '60ch',
               }}
             >
               {channel?.description ||
