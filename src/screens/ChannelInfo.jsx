@@ -13,14 +13,16 @@ import { fakeChannelInfo } from '../data/fakeChannelInfo';
 
 function ChannelInfo() {
   // Use plain refs for focusable elements
-  const playRef = useRef(null);
-  const favRef = useRef(null);
   const relatedGroupRef = useRef(null);
   const relatedCard1Ref = useRef(null);
   const relatedCard2Ref = useRef(null);
   const relatedCard3Ref = useRef(null);
   const relatedCard4Ref = useRef(null);
   const relatedCard5Ref = useRef(null);
+
+  // Refs for VariableSwimlane items (like Home.jsx)
+  const actionRefs = useRef([]); // For action buttons
+  const filterRefs = useRef([]); // For filter buttons
 
   // Get the channelId from the URL params and the state from the previous screen
   const { channelId } = useParams();
@@ -95,6 +97,7 @@ function ChannelInfo() {
   return (
     <>
       <div
+        className="channelinfo-content"
         style={{
           width: '100%',
           boxSizing: 'border-box',
@@ -106,6 +109,7 @@ function ChannelInfo() {
         }}
       >
         <div
+          className="channelinfo-header"
           style={{
             display: 'flex',
             flexDirection: 'row',
@@ -136,7 +140,17 @@ function ChannelInfo() {
           </div>
 
           {/* Channel Details Group */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
+          <div
+            className="channelinfo-details-group"
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 40,
+              minWidth: 0,
+              boxSizing: 'border-box',
+            }}
+          >
             {/* Channel Title */}
             <h1
               style={{
@@ -145,6 +159,9 @@ function ChannelInfo() {
                 fontWeight: 'var(--font-weight-bold)',
                 color: 'var(--color-text-primary)',
                 margin: 0,
+                minWidth: 0,
+                maxWidth: '100%',
+                boxSizing: 'border-box',
               }}
             >
               {channel?.title || 'Sample Channel Title'}
@@ -158,7 +175,6 @@ function ChannelInfo() {
                   label: 'Play',
                   icon: <SingNow />,
                   variant: 'primary',
-                  ref: playRef,
                   onClick: () => {
                     // Implement play logic
                   },
@@ -169,35 +185,36 @@ function ChannelInfo() {
                   label: 'Add to Favorites',
                   icon: <Like />,
                   variant: 'secondary',
-                  ref: favRef,
                   dataStableId: 'channelinfo-action-fav',
                 },
               ]}
               renderItem={(item, i, isFocused) => (
-                <KeyboardWrapper ref={item.ref} data-stable-id={item.dataStableId} key={item.id}>
-                  <Button
-                    icon={item.icon}
-                    showIcon
-                    size="medium"
-                    variant={item.variant}
-                    onClick={item.onClick}
-                    focused={isFocused}
-                    onKeyDown={e => {
-                      if (e.key === 'ArrowDown') {
-                        moveFocusDown();
-                        e.preventDefault();
-                      } else if (e.key === 'ArrowUp') {
-                        moveFocusUp();
-                        e.preventDefault();
-                      }
-                    }}
-                  >
-                    {item.label}
-                  </Button>
-                </KeyboardWrapper>
+                <Button
+                  key={item.id}
+                  ref={el => {
+                    actionRefs.current[i] = el;
+                  }}
+                  data-stable-id={item.dataStableId}
+                  icon={item.icon}
+                  showIcon
+                  size="medium"
+                  variant={item.variant}
+                  onClick={item.onClick}
+                  focused={isFocused}
+                  onKeyDown={e => {
+                    if (e.key === 'ArrowDown') {
+                      moveFocusDown();
+                      e.preventDefault();
+                    } else if (e.key === 'ArrowUp') {
+                      moveFocusUp();
+                      e.preventDefault();
+                    }
+                  }}
+                >
+                  {item.label}
+                </Button>
               )}
               className="channelinfo-action-swimlane"
-              width={'100%'}
               focused={focusedGroupIndex === ACTIONS_GROUP}
               focusedIndex={actionsFocusedIndex}
               onFocusChange={handleActionFocusChange}
@@ -209,8 +226,10 @@ function ChannelInfo() {
                 fontFamily: 'var(--font-family-primary)',
                 fontSize: 'var(--font-size-body)',
                 color: 'var(--color-text-secondary)',
-                maxWidth: '60ch',
                 minHeight: 150,
+                minWidth: 0,
+                maxWidth: '100%',
+                boxSizing: 'border-box',
               }}
             >
               {channel?.description ||
@@ -221,26 +240,29 @@ function ChannelInfo() {
             <VariableSwimlane
               items={filterTags}
               renderItem={(tag, i, isFocused) => (
-                <KeyboardWrapper key={tag.id} data-stable-id={`channelinfo-filter-${tag.id}`}>
-                  <Button
-                    variant="secondary"
-                    focused={isFocused}
-                    onKeyDown={e => {
-                      if (e.key === 'ArrowDown') {
-                        moveFocusDown();
-                        e.preventDefault();
-                      } else if (e.key === 'ArrowUp') {
-                        moveFocusUp();
-                        e.preventDefault();
-                      }
-                    }}
-                  >
-                    {tag.label}
-                  </Button>
-                </KeyboardWrapper>
+                <Button
+                  key={tag.id}
+                  ref={el => {
+                    filterRefs.current[i] = el;
+                  }}
+                  data-stable-id={`channelinfo-filter-${tag.id}`}
+                  size="medium"
+                  variant="secondary"
+                  focused={isFocused}
+                  onKeyDown={e => {
+                    if (e.key === 'ArrowDown') {
+                      moveFocusDown();
+                      e.preventDefault();
+                    } else if (e.key === 'ArrowUp') {
+                      moveFocusUp();
+                      e.preventDefault();
+                    }
+                  }}
+                >
+                  {tag.label}
+                </Button>
               )}
               className="channelinfo-filter-swimlane"
-              width={'100%'}
               focused={focusedGroupIndex === FILTERS_GROUP}
               focusedIndex={filtersFocusedIndex}
               onFocusChange={handleFilterFocusChange}
