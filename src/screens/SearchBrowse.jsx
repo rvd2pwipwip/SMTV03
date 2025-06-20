@@ -3,9 +3,6 @@ import { ChannelCard, Button } from '@smtv/tv-component-library';
 import '@smtv/tv-component-library/dist/style.css';
 import '../styles/App.css';
 import AdBanner from '../components/AdBanner';
-import { Info } from 'stingray-icons';
-import stingrayMusicLogo from '../assets/svg/stingrayMusic.svg';
-import { TRANS_BTN_ICON_SIZE } from '../constants/ui';
 import FixedSwimlane from '../components/FixedSwimlane';
 import { fakeChannels } from '../data/fakeChannels';
 import KeyboardWrapper from '../components/KeyboardWrapper';
@@ -194,11 +191,11 @@ function SearchBrowse() {
             justifyContent: 'center',
             padding:
               'var(--screen-side-padding) var(--screen-side-padding) 0 var(--screen-side-padding)',
-            minHeight: 90,
+            minHeight: 184,
             boxSizing: 'border-box',
           }}
         >
-          <div style={{ maxWidth: '800px', width: '100%' }}>
+          <div style={{ width: '100%' }}>
             <SearchField
               ref={searchRef}
               value={searchQuery}

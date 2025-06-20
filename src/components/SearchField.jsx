@@ -1,4 +1,4 @@
-import React, { forwardRef, useState } from 'react';
+import React, { forwardRef, useState, useRef } from 'react';
 import { Button } from '@smtv/tv-component-library';
 import { MagnifyingGlass } from 'stingray-icons';
 
@@ -29,6 +29,7 @@ const SearchField = forwardRef(
     ref
   ) => {
     const [isFocused, setIsFocused] = useState(false);
+    const clearButtonRef = useRef(null);
 
     const handleInputChange = e => {
       onChange?.(e.target.value);
@@ -46,6 +47,11 @@ const SearchField = forwardRef(
       } else if (e.key === 'Escape') {
         handleClear();
         e.preventDefault();
+      } else if (e.key === 'ArrowRight' && value && clearButtonRef.current) {
+        // Navigate to Clear button when there's text and right arrow is pressed
+        clearButtonRef.current.focus();
+        e.preventDefault();
+        return; // Don't call onKeyDown for navigation
       }
 
       onKeyDown?.(e);
@@ -117,35 +123,22 @@ const SearchField = forwardRef(
             }}
             {...props}
           />
-
-          {/* Clear Button */}
-          {value && (
-            <Button
-              size="small"
-              variant="transparent"
-              aria-label="Clear search"
-              onClick={handleClear}
-              style={{
-                marginLeft: '16px',
-                padding: '8px',
-                minWidth: '40px',
-                height: '40px',
-                fontSize: '20px',
-                fontWeight: 'bold',
-                color: '#FAFAFA',
-              }}
-            >
-              ×
-            </Button>
-          )}
         </div>
 
         {/* Clear All Button (separate from input, like in Figma) */}
         {value && (
           <Button
+            ref={clearButtonRef}
             variant="secondary"
             size="medium"
             onClick={handleClear}
+            onKeyDown={e => {
+              if (e.key === 'ArrowLeft') {
+                // Navigate back to search field
+                ref?.current?.focus();
+                e.preventDefault();
+              }
+            }}
             style={{
               marginLeft: '30px',
               flexShrink: 0,
