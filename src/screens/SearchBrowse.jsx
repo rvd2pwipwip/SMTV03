@@ -10,6 +10,7 @@ import VariableSwimlane from '../components/VariableSwimlane';
 import { browseFilters } from '../data/browseFilters';
 import { genreFilters } from '../data/genreFilters';
 import { generateFakeSearchResults } from '../data/fakeSearchResults';
+import { fakeBrowseCategories, getCategoriesForFilter } from '../data/fakeBrowseCategories';
 import { useFocusNavigation } from '../contexts/GroupFocusNavigationContext';
 import { getSidePadding } from '../utils/layout';
 import { useScreenMemory } from '../contexts/ScreenMemoryContext';
@@ -22,6 +23,12 @@ function SearchBrowse() {
   const [searchResults, setSearchResults] = useState({});
   const [isSearchMode, setIsSearchMode] = useState(false);
 
+  // Browse mode state
+  const [activeBrowseFilter, setActiveBrowseFilter] = useState('genre'); // genre, activity, mood, era, theme
+
+  // Get current browse categories based on active filter
+  const currentBrowseCategories = getCategoriesForFilter(activeBrowseFilter);
+
   // Dynamic filters based on mode
   const searchResultFilters = isSearchMode
     ? [
@@ -32,6 +39,7 @@ function SearchBrowse() {
       ].filter(filter => searchResults[filter.id] && searchResults[filter.id].length > 0)
     : [];
 
+  // Show main browse filters in browse mode, search filters in search mode
   const currentFilters = isSearchMode ? searchResultFilters : browseFilters;
 
   // Persistent screen memory for activeFilterId
@@ -76,11 +84,9 @@ function SearchBrowse() {
       : safeActiveFilterIndex
   );
 
-  // Swimlane group focus
-  const swimlaneMemory = getGroupFocusMemory(SWIMLANE_GROUP);
-  const [swimlaneFocusedIndex, setSwimlaneFocusedIndex] = useState(
-    swimlaneMemory.focusedIndex ?? 0
-  );
+  // Swimlane group focus - use screen-specific memory and always start at 0
+  // This ensures SearchBrowse swimlane is independent from Home swimlane
+  const [swimlaneFocusedIndex, setSwimlaneFocusedIndex] = useState(0);
 
   const navigate = useNavigate();
 
@@ -106,16 +112,23 @@ function SearchBrowse() {
     }
   }, [searchQuery]);
 
-  // Reset filter focus when switching modes
+  // Reset filter and swimlane focus when switching modes or active browse filter
   useEffect(() => {
     setFiltersFocusedIndex(0);
     setHasNavigatedFiltersHorizontally(false);
-  }, [isSearchMode]);
+    // Always reset swimlane to first item when mode or active browse filter changes
+    setSwimlaneFocusedIndex(0);
+  }, [isSearchMode, activeFilterId, activeBrowseFilter]);
 
   const handleChannelSelect = channel => {
     navigate(`/channel-info/${channel.id}`, {
       state: { fromSearchBrowse: true },
     });
+  };
+
+  const handleCategorySelect = category => {
+    // TODO: Navigate to category details screen
+    console.log('Selected category:', category);
   };
 
   // Handle horizontal navigation state tracking
@@ -133,7 +146,8 @@ function SearchBrowse() {
     if (isSearchMode) {
       return searchResults[activeFilterId] || [];
     } else {
-      return fakeChannels;
+      // In browse mode, return categories for the selected browse filter
+      return currentBrowseCategories || [];
     }
   };
 
@@ -157,11 +171,13 @@ function SearchBrowse() {
     }
   }, [focusedGroupIndex]);
 
-  // Auto-focus search field on mount
+  // Auto-focus search field on mount and reset swimlane to start
   useEffect(() => {
     if (searchRef.current) {
       searchRef.current.focus();
     }
+    // Always start with first item in swimlane when entering this screen
+    setSwimlaneFocusedIndex(0);
   }, []);
 
   return (
@@ -224,7 +240,15 @@ function SearchBrowse() {
                   filterRefs.current[i] = el;
                 }}
                 key={filter.id}
-                variant={filter.id === activeFilterId ? 'primary' : 'secondary'}
+                variant={
+                  isSearchMode
+                    ? filter.id === activeFilterId
+                      ? 'primary'
+                      : 'secondary'
+                    : filter.id === activeBrowseFilter
+                      ? 'primary'
+                      : 'secondary'
+                }
                 size="medium"
                 focused={focused}
                 onClick={() => setActiveFilterId(filter.id)}
@@ -245,7 +269,12 @@ function SearchBrowse() {
             focused={focusedGroupIndex === FILTERS_GROUP}
             focusedIndex={filtersFocusedIndex}
             onSelect={(filter, i) => {
-              setActiveFilterId(filter.id);
+              if (isSearchMode) {
+                setActiveFilterId(filter.id);
+              } else {
+                // In browse mode, set the active browse filter
+                setActiveBrowseFilter(filter.id);
+              }
               handleFilterHorizontalNavigation(i);
             }}
             onFocusChange={index => {
@@ -254,7 +283,11 @@ function SearchBrowse() {
             leftPadding={getSidePadding()}
             rightPadding={getSidePadding()}
             ensureActiveVisible={true}
-            activeIndex={currentFilters.findIndex(f => f.id === activeFilterId)}
+            activeIndex={
+              isSearchMode
+                ? currentFilters.findIndex(f => f.id === activeFilterId)
+                : currentFilters.findIndex(f => f.id === activeBrowseFilter)
+            }
           />
         )}
 
@@ -265,7 +298,9 @@ function SearchBrowse() {
             renderItem={(item, i, focused) => (
               <KeyboardWrapper
                 key={item.id}
-                onSelect={() => handleChannelSelect(item)}
+                onSelect={() =>
+                  isSearchMode ? handleChannelSelect(item) : handleCategorySelect(item)
+                }
                 selectData={item}
                 ref={el => {
                   cardRefs.current[i] = el;
@@ -275,19 +310,21 @@ function SearchBrowse() {
               >
                 <ChannelCard
                   title={item.title || item.name || 'Unknown'}
-                  thumbnailUrl={item.thumbnailUrl}
+                  thumbnailUrl={item.thumbnailUrl || '/placeholder-category.png'}
                   focused={focused}
-                  onClick={() => handleChannelSelect(item)}
+                  onClick={() =>
+                    isSearchMode ? handleChannelSelect(item) : handleCategorySelect(item)
+                  }
                 />
               </KeyboardWrapper>
             )}
             maxItems={12}
-            fallbackItem={<div>No channels available</div>}
+            fallbackItem={<div>No content available</div>}
             focused={focusedGroupIndex === SWIMLANE_GROUP}
             focusedIndex={swimlaneFocusedIndex}
             onFocusChange={index => {
               setSwimlaneFocusedIndex(index);
-              setGroupFocusMemory(SWIMLANE_GROUP, { focusedIndex: index });
+              // Don't store in global group memory - keep SearchBrowse swimlane independent
             }}
             leftPadding={getSidePadding()}
             rightPadding={getSidePadding()}
@@ -324,7 +361,7 @@ function SearchBrowse() {
               opacity: 0.7,
             }}
           >
-            Start typing to search...
+            No categories available
           </div>
         )}
       </div>
