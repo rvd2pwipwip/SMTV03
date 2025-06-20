@@ -1,4 +1,5 @@
 @import '@smtv/design-tokens/dist/design-tokens.css';
+@import './focus-ring.css';
 
 :root {
   --screen-side-padding: 100px;
@@ -108,4 +109,4 @@
 
 .content-swimlane::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
-} 
+}

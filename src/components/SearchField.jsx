@@ -83,6 +83,7 @@ const SearchField = forwardRef(
         }}
       >
         <div
+          className={`tv-focusable ${focused || isFocused ? 'tv-focused' : ''}`}
           style={{
             position: 'relative',
             width: '100%',
@@ -90,8 +91,6 @@ const SearchField = forwardRef(
             alignItems: 'center',
             backgroundColor: 'rgba(255, 255, 255, 0.1)',
             borderRadius: '10px',
-            border: focused || isFocused ? '2px solid #338DE6' : '2px solid transparent',
-            transition: 'border-color 0.2s ease',
             padding: '0 20px',
             height: '70px',
           }}

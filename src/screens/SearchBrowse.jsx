@@ -41,7 +41,6 @@ function SearchBrowse() {
 
   // Refs for each group
   const searchRef = useRef(null);
-  const infoRef = useRef(null);
   const filterRefs = useRef([]); // For filter buttons
   const cardRefs = useRef([]); // For channel cards
 
@@ -155,7 +154,6 @@ function SearchBrowse() {
   useEffect(() => {
     if (focusedGroupIndex !== HEADER_GROUP) {
       searchRef.current?.blur();
-      infoRef.current?.blur();
     }
   }, [focusedGroupIndex]);
 

@@ -1,0 +1,47 @@
+/* Focus ring utility for custom components to match tv-component-library styling 
+ *
+ * Usage:
+ * 1. Add 'tv-focusable' class to the base element
+ * 2. Conditionally add 'tv-focused' class when the element should show focus
+ * 3. Optionally add 'tv-scale' to enable the scaling animation
+ * 
+ * Examples:
+ * Standard focus (no scaling - default):
+ * <div className={`tv-focusable ${isFocused ? 'tv-focused' : ''}`}>
+ *   Custom component content
+ * </div>
+ *
+ * Focus with scaling animation:
+ * <div className={`tv-focusable ${isFocused ? 'tv-focused tv-scale' : ''}`}>
+ *   Custom component content
+ * </div>
+ *
+ * This ensures consistent focus styling across all custom components.
+ */
+
+/* Base focusable element */
+.tv-focusable {
+  outline: var(--focus-outline-width) var(--focus-ring-style) transparent;
+  outline-offset: var(--focus-ring-offset);
+  transform: scale(1);
+  transition: all 0.2s ease-in-out;
+}
+
+/* Focused state - no scaling by default */
+.search-field-container .tv-focusable.tv-focused,
+.tv-focusable.tv-focused {
+  outline: var(--focus-outline-width) var(--focus-ring-style) var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset);
+  background-color: var(--color-focus-bg);
+  transform: scale(1);
+  transition: all 0.2s ease-in-out;
+}
+
+/* Optional scaling effect for components that need it */
+.tv-focusable.tv-focused.tv-scale {
+  outline: var(--focus-outline-width) var(--focus-ring-style) var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset);
+  background-color: var(--color-focus-bg);
+  transform: scale(var(--animation-focus-scale));
+  transition: all 0.2s ease-in-out;
+}
