@@ -48,10 +48,16 @@ const SearchField = forwardRef(
         handleClear();
         e.preventDefault();
       } else if (e.key === 'ArrowRight' && value && clearButtonRef.current) {
-        // Navigate to Clear button when there's text and right arrow is pressed
-        clearButtonRef.current.focus();
-        e.preventDefault();
-        return; // Don't call onKeyDown for navigation
+        // Only navigate to Clear button if cursor is at the end of the text
+        const cursorPosition = e.target.selectionStart;
+        const isAtEnd = cursorPosition === value.length;
+
+        if (isAtEnd) {
+          clearButtonRef.current.focus();
+          e.preventDefault();
+          return; // Don't call onKeyDown for navigation
+        }
+        // If not at end, let normal cursor movement happen (don't prevent default)
       }
 
       onKeyDown?.(e);
@@ -134,8 +140,13 @@ const SearchField = forwardRef(
             onClick={handleClear}
             onKeyDown={e => {
               if (e.key === 'ArrowLeft') {
-                // Navigate back to search field
-                ref?.current?.focus();
+                // Navigate back to search field and position cursor after last character
+                if (ref?.current) {
+                  ref.current.focus();
+                  // Set cursor position to end of text
+                  const length = value.length;
+                  ref.current.setSelectionRange(length, length);
+                }
                 e.preventDefault();
               }
             }}
