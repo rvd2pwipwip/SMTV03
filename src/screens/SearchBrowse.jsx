@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { ChannelCard, Button } from '@smtv/tv-component-library';
 import '@smtv/tv-component-library/dist/style.css';
 import '../styles/App.css';
+import CategoryCard from '../components/CategoryCard';
 import AdBanner from '../components/AdBanner';
 import FixedSwimlane from '../components/FixedSwimlane';
 import { fakeChannels } from '../data/fakeChannels';
@@ -308,17 +309,24 @@ function SearchBrowse() {
                 onUp={moveFocusUp}
                 onDown={moveFocusDown}
               >
-                <ChannelCard
-                  title={item.title || item.name || 'Unknown'}
-                  thumbnailUrl={item.thumbnailUrl || '/placeholder-category.png'}
-                  focused={focused}
-                  onClick={() =>
-                    isSearchMode ? handleChannelSelect(item) : handleCategorySelect(item)
-                  }
-                />
+                {isSearchMode ? (
+                  <ChannelCard
+                    title={item.title || item.name || 'Unknown'}
+                    thumbnailUrl={item.thumbnailUrl}
+                    focused={focused}
+                    onClick={() => handleChannelSelect(item)}
+                  />
+                ) : (
+                  <CategoryCard
+                    title={item.name || 'Unknown Category'}
+                    thumbnailUrl={item.thumbnailUrl}
+                    focused={focused}
+                    onClick={() => handleCategorySelect(item)}
+                  />
+                )}
               </KeyboardWrapper>
             )}
-            maxItems={12}
+            maxItems={24}
             fallbackItem={<div>No content available</div>}
             focused={focusedGroupIndex === SWIMLANE_GROUP}
             focusedIndex={swimlaneFocusedIndex}
