@@ -169,12 +169,16 @@ function Home() {
               variant="transparent"
               aria-label="Search"
               focused={focusedGroupIndex === HEADER_GROUP && headerFocusedIndex === 0}
+              onClick={() => navigate('/search-browse')}
               onFocus={() => {
                 setHeaderFocusedIndex(0);
                 setGroupFocusMemory(HEADER_GROUP, { focusedIndex: 0 });
               }}
               onKeyDown={e => {
-                if (e.key === 'ArrowRight') {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  navigate('/search-browse');
+                  e.preventDefault();
+                } else if (e.key === 'ArrowRight') {
                   setHeaderFocusedIndex(1);
                   setGroupFocusMemory(HEADER_GROUP, { focusedIndex: 1 });
                   infoRef.current?.focus();
