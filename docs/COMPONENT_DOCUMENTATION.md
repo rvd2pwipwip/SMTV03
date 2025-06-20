@@ -3,21 +3,25 @@
 ## Overview
 
 ### Project Information
+
 - **Repository**: [tv-component-library](https://github.com/rvd2pwipwip/tv-component-library)
 - **Purpose**: Reusable TV components with TV-specific considerations
 - **Status**: Initial setup phase
-- **Version**: _[Add your current version here, e.g., 1.0.0]_  <!-- Add versioning info for future reference -->
+- **Version**: _[Add your current version here, e.g., 1.0.0]_ <!-- Add versioning info for future reference -->
 
 ## Design Philosophy
 
 ### Building Blocks Approach
+
 Components are designed as simple, reusable building blocks that:
+
 - Maintain focus and simplicity
 - Enable flexible composition
 - Follow design system best practices
 - Support easy testing and documentation
 
 ### Navigation and Interactivity
+
 - Navigation managed at application level
 - Components remain simple and predictable
 - Parent components handle navigation patterns
@@ -26,7 +30,9 @@ Components are designed as simple, reusable building blocks that:
 ## Component Categories
 
 ### 1. Navigation Components
+
 - **TVMenu**
+
   - Purpose: Main navigation menu
   - Features:
     - Focus management using Norigin Spatial Navigation
@@ -58,7 +64,9 @@ Components are designed as simple, reusable building blocks that:
     - onSelect: Click handler
 
 ### 2. Content Components
+
 - **TVSwimlane**
+
   - Purpose: Horizontal scrollable content container
   - Features:
     - Single row of focusable items
@@ -71,11 +79,7 @@ Components are designed as simple, reusable building blocks that:
     - onItemSelect: Selection handler
   - **Example:**
     ```jsx
-    <TVSwimlane
-      title="Featured"
-      items={channelList}
-      onItemSelect={handleChannelSelect}
-    />
+    <TVSwimlane title="Featured" items={channelList} onItemSelect={handleChannelSelect} />
     ```
 
 - **TVCard**
@@ -94,14 +98,11 @@ Components are designed as simple, reusable building blocks that:
     - metadata: Additional info
   - **Example:**
     ```jsx
-    <TVCard
-      title="Channel 1"
-      image="/images/channel1.png"
-      metadata={{ viewers: 1200 }}
-    />
+    <TVCard title="Channel 1" image="/images/channel1.png" metadata={{ viewers: 1200 }} />
     ```
 
 ### 3. Interactive Components
+
 - **TVButton**
   - Purpose: Interactive button
   - Features:
@@ -133,6 +134,7 @@ Components are designed as simple, reusable building blocks that:
     ```
 
 #### Icon Sizing for Transparent Buttons
+
 To ensure consistent icon sizing for all transparent buttons across the app, use the shared JS constant `TRANS_BTN_ICON_SIZE` defined in `src/constants/ui.js`:
 
 ```js
@@ -141,6 +143,7 @@ export const TRANS_BTN_ICON_SIZE = 44; // px
 ```
 
 When using a transparent button with an icon:
+
 ```js
 import { TRANS_BTN_ICON_SIZE } from '../constants/ui';
 <Button
@@ -148,15 +151,37 @@ import { TRANS_BTN_ICON_SIZE } from '../constants/ui';
   showIcon
   size="medium"
   variant="ButtonTransparent"
-/>
+/>;
 ```
 
 To update the icon size for all transparent buttons, change the value of `TRANS_BTN_ICON_SIZE` in one place.
 
+- **TVTextInput (Future Development)**
+  - Purpose: TV-optimized text input component
+  - **Status**: Planned for future development
+  - **Rationale**: Native HTML input elements require complex focus management workarounds for TV interfaces
+  - Features (Planned):
+    - Custom implementation designed for remote control navigation
+    - Simplified focus management without browser input complications
+    - Built-in TV-specific styling and behavior
+    - Integration with Norigin Spatial Navigation
+    - Custom cursor and text selection handling
+    - Support for TV-specific input patterns
+  - **Alternative Approaches:**
+    - ContentEditable div with custom text handling
+    - Canvas-based text rendering with custom input logic
+    - React component with keyboard event management
+  - **Current Workaround**:
+    - Using native HTML input with extensive focus management
+    - Requires complex state tracking for proper TV navigation
+    - See `TV_INPUT_CONSIDERATIONS.md` for detailed analysis
+
 ## Implementation Guidelines
 
 ### Component Responsibilities
+
 Components should:
+
 - Handle their own styling and layout
 - Manage their internal state
 - Provide clear props for customization
@@ -164,7 +189,9 @@ Components should:
 - Not implement complex navigation logic
 
 ### Parent Component Responsibilities
+
 Parent components should:
+
 - Implement navigation patterns
 - Manage focus and keyboard events
 - Handle component composition
@@ -173,6 +200,7 @@ Parent components should:
 ## Design System Integration
 
 ### Shared Design Tokens
+
 - Colors
 - Typography
 - Spacing
@@ -180,12 +208,15 @@ Parent components should:
 - **Icon sizing constant for transparent buttons**
 
 **Note:**
+
 > Always import the design tokens CSS in your app entry point (e.g., `main.jsx` or `App.jsx`) to ensure all components are styled correctly:
+>
 > ```js
 > import '@smtv/design-tokens/dist/design-tokens.css';
 > ```
 
 ### TV-Specific Considerations
+
 - Fixed viewport (1920x1080)
 - Remote control navigation
 - Clear focus states
@@ -194,12 +225,14 @@ Parent components should:
 ## Development Guidelines
 
 ### Focus Management
+
 - Every interactive component must use Norigin Spatial Navigation
 - Implement proper focus tree structure
 - Support keyboard navigation
 - Handle focus restoration
 
 ### Accessibility Requirements
+
 - Include ARIA labels
 - Support screen readers
 - Maintain proper focus order
@@ -207,6 +240,7 @@ Parent components should:
 - Follow TV-specific accessibility guidelines
 
 ### Spatial Navigation Integration
+
 - Use `useFocusable` hook for focusable components
 - Implement `FocusContext.Provider` for containers
 - Handle focus tree hierarchy
@@ -217,7 +251,9 @@ Parent components should:
 ## Migration Plan
 
 ### Phase 1: Core Components
+
 1. **ChannelCard**
+
    - Move from `src/components/ChannelCard.jsx`
    - Include styles and stories
    - Document usage and variants
@@ -228,11 +264,13 @@ Parent components should:
    - Document usage and variants
 
 ### Phase 2: Navigation Components
+
 1. **Header**
 2. **Category Navigation**
 3. **Mode Switcher**
 
 ### Phase 3: Player Components
+
 1. **Mini Player**
 2. **Player Controls**
 3. **Progress Bar**
@@ -240,6 +278,7 @@ Parent components should:
 ## Development Workflow
 
 ### Component Development Process
+
 1. Create component file
 2. Implement basic functionality
 3. Add TV-specific features
@@ -249,6 +288,7 @@ Parent components should:
 7. Add to component library
 
 ### Testing Requirements
+
 - Unit tests for component logic
 - Integration tests for navigation
 - Accessibility testing
@@ -258,13 +298,15 @@ Parent components should:
 ## Documentation
 
 ### Component Library
+
 - Storybook documentation
 - Usage examples
 - Props documentation
 - Accessibility guidelines
 
 ### TV App
+
 - Component usage
 - Integration patterns
 - Customization options
-- Migration guides 
+- Migration guides

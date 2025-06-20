@@ -29,6 +29,7 @@ const SearchField = forwardRef(
     ref
   ) => {
     const [isFocused, setIsFocused] = useState(false);
+    const [isOnClearButton, setIsOnClearButton] = useState(false);
     const clearButtonRef = useRef(null);
 
     const handleInputChange = e => {
@@ -53,6 +54,9 @@ const SearchField = forwardRef(
         const isAtEnd = cursorPosition === value.length;
 
         if (isAtEnd) {
+          // Navigate to Clear button and update focus tracking
+          setIsOnClearButton(true);
+          setIsFocused(false);
           clearButtonRef.current.focus();
           e.preventDefault();
           return; // Don't call onKeyDown for navigation
@@ -65,6 +69,7 @@ const SearchField = forwardRef(
 
     const handleFocus = e => {
       setIsFocused(true);
+      setIsOnClearButton(false);
       onFocus?.(e);
     };
 
@@ -83,7 +88,7 @@ const SearchField = forwardRef(
         }}
       >
         <div
-          className={`tv-focusable ${focused || isFocused ? 'tv-focused' : ''}`}
+          className={`tv-focusable ${(focused || isFocused) && !isOnClearButton ? 'tv-focused' : ''}`}
           style={{
             position: 'relative',
             width: '100%',
@@ -92,18 +97,28 @@ const SearchField = forwardRef(
             backgroundColor: 'rgba(255, 255, 255, 0.1)',
             borderRadius: '10px',
             padding: '0 20px',
-            height: '70px',
+            height: '60px',
           }}
         >
           {/* Search Icon */}
-          <MagnifyingGlass
-            size={24}
+          <div
             style={{
-              color: '#FAFAFA',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               marginRight: '16px',
-              opacity: 0.7,
+              height: '100%',
             }}
-          />
+          >
+            <MagnifyingGlass
+              size={24}
+              style={{
+                color: '#FAFAFA',
+                opacity: 0.7,
+                display: 'block',
+              }}
+            />
+          </div>
 
           {/* Input Field */}
           <input
@@ -124,7 +139,10 @@ const SearchField = forwardRef(
               fontSize: '28px',
               fontFamily: 'Roboto, sans-serif',
               fontWeight: 400,
-              lineHeight: '1.17em',
+              lineHeight: 'normal',
+              margin: 0,
+              padding: 0,
+              verticalAlign: 'middle',
             }}
             {...props}
           />
@@ -137,10 +155,18 @@ const SearchField = forwardRef(
             variant="secondary"
             size="medium"
             onClick={handleClear}
+            onFocus={() => {
+              setIsOnClearButton(true);
+            }}
+            onBlur={() => {
+              setIsOnClearButton(false);
+            }}
             onKeyDown={e => {
               if (e.key === 'ArrowLeft') {
                 // Navigate back to search field and position cursor after last character
                 if (ref?.current) {
+                  setIsOnClearButton(false);
+                  setIsFocused(true);
                   ref.current.focus();
                   // Set cursor position to end of text
                   const length = value.length;
