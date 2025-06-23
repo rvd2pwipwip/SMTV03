@@ -45,7 +45,7 @@
   "dependencies": {
     "@browsermcp/mcp": "^0.1.3",
     "@smtv/design-tokens": "^1.0.3",
-    "@smtv/tv-component-library": "^2.1.12",
+    "@smtv/tv-component-library": "^2.2.1",
     "react-router-dom": "^7.6.2",
     "stingray-icons": "^1.0.4"
   }

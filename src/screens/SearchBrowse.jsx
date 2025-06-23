@@ -1,8 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { ChannelCard, Button } from '@smtv/tv-component-library';
+import { ChannelCard, Button, CategoryCard } from '@smtv/tv-component-library';
 import '@smtv/tv-component-library/dist/style.css';
 import '../styles/App.css';
-import CategoryCard from '../components/CategoryCard';
 import AdBanner from '../components/AdBanner';
 import FixedSwimlane from '../components/FixedSwimlane';
 import { fakeChannels } from '../data/fakeChannels';
