@@ -113,13 +113,18 @@ function SearchBrowse() {
     }
   }, [searchQuery]);
 
-  // Reset filter and swimlane focus when switching modes or active browse filter
+  // Reset filter and swimlane focus when switching modes
   useEffect(() => {
     setFiltersFocusedIndex(0);
     setHasNavigatedFiltersHorizontally(false);
-    // Always reset swimlane to first item when mode or active browse filter changes
+    // Always reset swimlane to first item when switching modes
     setSwimlaneFocusedIndex(0);
-  }, [isSearchMode, activeFilterId, activeBrowseFilter]);
+  }, [isSearchMode, activeFilterId]);
+
+  // Reset swimlane focus when browse filter changes (but keep filter focus)
+  useEffect(() => {
+    setSwimlaneFocusedIndex(0);
+  }, [activeBrowseFilter]);
 
   const handleChannelSelect = channel => {
     navigate(`/channel-info/${channel.id}`, {
