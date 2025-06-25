@@ -20,8 +20,8 @@ import { useNavigate } from 'react-router-dom';
 function Home() {
   // Persistent screen memory for activeFilterId
   const { memory, setField } = useScreenMemory('home');
-  // const activeFilterId = memory.activeFilterId || tvHomeFilters[0]?.id;
-  const activeFilterId = memory.activeFilterId || genreFilters[0]?.id;
+  const activeFilterId = memory.activeFilterId || tvHomeFilters[0]?.id;
+  // const activeFilterId = memory.activeFilterId || genreFilters[0]?.id;
   const setActiveFilterId = id => setField('activeFilterId', id);
 
   // Refs for each group
@@ -57,7 +57,7 @@ function Home() {
   const [hasNavigatedFiltersHorizontally, setHasNavigatedFiltersHorizontally] = useState(false);
 
   // Calculate the index of the currently active filter for initial positioning
-  const activeFilterIndex = genreFilters.findIndex(f => f.id === activeFilterId);
+  const activeFilterIndex = tvHomeFilters.findIndex(f => f.id === activeFilterId);
   const safeActiveFilterIndex = activeFilterIndex >= 0 ? activeFilterIndex : 0;
 
   // Filters group focus - UX LOGIC:
@@ -219,8 +219,8 @@ function Home() {
 
         {/* Filters group */}
         <VariableSwimlane
-          // items={tvHomeFilters}
-          items={genreFilters}
+          items={tvHomeFilters}
+          // items={genreFilters}
           renderItem={(filter, i, focused) => (
             <Button
               ref={el => {
@@ -265,7 +265,7 @@ function Home() {
           ensureActiveVisible={true}
           // UX FIX: Use correct data source for activeIndex calculation
           // Previously used tvHomeFilters but we're actually rendering genreFilters
-          activeIndex={genreFilters.findIndex(f => f.id === activeFilterId)}
+          activeIndex={tvHomeFilters.findIndex(f => f.id === activeFilterId)}
         />
 
         {/* UX PATTERN: Filter navigation balances content context with navigation memory */}
