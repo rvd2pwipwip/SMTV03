@@ -11,7 +11,7 @@ import { fakeChannels } from '../data/fakeChannels';
 import KeyboardWrapper from '../components/KeyboardWrapper';
 import VariableSwimlane from '../components/VariableSwimlane';
 import { tvHomeFilters } from '../data/tvHomeFilters';
-import { genreFilters } from '../data/genreFilters';
+import { genreFilters } from '../data/genreFilters'; // for testing VariableSwimlane
 import { useFocusNavigation } from '../contexts/GroupFocusNavigationContext';
 import { getSidePadding } from '../utils/layout';
 import { useScreenMemory } from '../contexts/ScreenMemoryContext';
