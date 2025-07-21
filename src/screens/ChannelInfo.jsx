@@ -10,8 +10,13 @@ import { getSidePadding } from '../utils/layout';
 import VariableSwimlane from '../components/VariableSwimlane';
 import { fakeChannels } from '../data/fakeChannels';
 import { fakeChannelInfo } from '../data/fakeChannelInfo';
+import { usePlayer } from '../contexts/PlayerContext';
 
 function ChannelInfo() {
+  // Test PlayerContext accessibility
+  const { isPlayerOpen, openPlayer, closePlayer } = usePlayer();
+  console.log('PlayerContext test - isPlayerOpen:', isPlayerOpen);
+
   // Use plain refs for focusable elements
   const relatedGroupRef = useRef(null);
   const relatedCard1Ref = useRef(null);
