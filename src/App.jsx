@@ -6,16 +6,22 @@ import SearchBrowse from './screens/SearchBrowse';
 import './styles/App.css';
 import { GroupFocusNavigationProvider } from './contexts/GroupFocusNavigationContext';
 import { ScreenMemoryProvider } from './contexts/ScreenMemoryContext';
-import { PlayerProvider } from './contexts/PlayerContext';
+import { PlayerProvider, usePlayer } from './contexts/PlayerContext';
+import PlayerOverlay from './components/PlayerOverlay';
 
-function App() {
-  // Home: header=0, filters=1, swimlane=2
+// Inner component that can access PlayerContext
+function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isPlayerOpen } = usePlayer();
 
   useEffect(() => {
     const handleKeyDown = e => {
       if (e.key === 'Escape') {
+        // Don't navigate if player overlay is open - let PlayerOverlay handle it
+        if (isPlayerOpen) {
+          return;
+        }
         // Only navigate back if not on Home
         if (location.pathname !== '/') {
           e.preventDefault();
@@ -26,35 +32,42 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate, location.pathname]);
+  }, [navigate, location.pathname, isPlayerOpen]);
 
   return (
+    <GroupFocusNavigationProvider groupCount={3} initialGroupIndex={2}>
+      <ScreenMemoryProvider>
+        <div
+          className="app-content"
+          style={{
+            width: '1920px',
+            height: '1080px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'stretch',
+            justifyContent: 'flex-start',
+            background: 'var(--app-background, #000)',
+            margin: '0 auto',
+            position: 'absolute',
+            overflow: 'hidden',
+          }}
+        >
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/search-browse" element={<SearchBrowse />} />
+            <Route path="/channel-info/:channelId" element={<ChannelInfo />} />
+          </Routes>
+        </div>
+        <PlayerOverlay />
+      </ScreenMemoryProvider>
+    </GroupFocusNavigationProvider>
+  );
+}
+
+function App() {
+  return (
     <PlayerProvider>
-      <GroupFocusNavigationProvider groupCount={3} initialGroupIndex={2}>
-        <ScreenMemoryProvider>
-          <div
-            className="app-content"
-            style={{
-              width: '1920px',
-              height: '1080px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'stretch',
-              justifyContent: 'flex-start',
-              background: 'var(--app-background, #000)',
-              margin: '0 auto',
-              position: 'absolute',
-              overflow: 'hidden',
-            }}
-          >
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/search-browse" element={<SearchBrowse />} />
-              <Route path="/channel-info/:channelId" element={<ChannelInfo />} />
-            </Routes>
-          </div>
-        </ScreenMemoryProvider>
-      </GroupFocusNavigationProvider>
+      <AppContent />
     </PlayerProvider>
   );
 }

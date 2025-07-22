@@ -14,12 +14,10 @@ export const PlayerProvider = ({ children }) => {
   const [isPlayerOpen, setIsPlayerOpen] = useState(false);
 
   const openPlayer = () => {
-    console.log('Opening player overlay');
     setIsPlayerOpen(true);
   };
 
   const closePlayer = () => {
-    console.log('Closing player overlay');
     setIsPlayerOpen(false);
   };
 

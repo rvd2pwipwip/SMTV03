@@ -13,9 +13,8 @@ import { fakeChannelInfo } from '../data/fakeChannelInfo';
 import { usePlayer } from '../contexts/PlayerContext';
 
 function ChannelInfo() {
-  // Test PlayerContext accessibility
+  // Player context for overlay functionality
   const { isPlayerOpen, openPlayer, closePlayer } = usePlayer();
-  console.log('PlayerContext test - isPlayerOpen:', isPlayerOpen);
 
   // Use plain refs for focusable elements
   const relatedGroupRef = useRef(null);
@@ -224,7 +223,7 @@ function ChannelInfo() {
                   icon: <SingNow />,
                   variant: 'primary',
                   onClick: () => {
-                    // Implement play logic
+                    openPlayer();
                   },
                   dataStableId: 'channelinfo-action-play',
                 },
@@ -236,6 +235,11 @@ function ChannelInfo() {
                   dataStableId: 'channelinfo-action-fav',
                 },
               ]}
+              onSelect={(item, index) => {
+                if (item.onClick) {
+                  item.onClick();
+                }
+              }}
               renderItem={(item, i, isFocused) => (
                 <Button
                   key={item.id}
@@ -247,7 +251,11 @@ function ChannelInfo() {
                   showIcon
                   size="medium"
                   variant={item.variant}
-                  onClick={item.onClick}
+                  onClick={() => {
+                    if (item.onClick) {
+                      item.onClick();
+                    }
+                  }}
                   focused={isFocused}
                   onKeyDown={e => {
                     if (e.key === 'ArrowDown') {
