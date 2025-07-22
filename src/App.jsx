@@ -8,6 +8,7 @@ import { GroupFocusNavigationProvider } from './contexts/GroupFocusNavigationCon
 import { ScreenMemoryProvider } from './contexts/ScreenMemoryContext';
 import { PlayerProvider, usePlayer } from './contexts/PlayerContext';
 import PlayerOverlay from './components/PlayerOverlay';
+import MiniPlayer from './components/MiniPlayer';
 
 // Inner component that can access PlayerContext
 function AppContent() {
@@ -35,7 +36,7 @@ function AppContent() {
   }, [navigate, location.pathname, isPlayerOpen]);
 
   return (
-    <GroupFocusNavigationProvider groupCount={3} initialGroupIndex={2}>
+    <GroupFocusNavigationProvider baseGroupCount={3} initialGroupIndex={2}>
       <ScreenMemoryProvider>
         <div
           className="app-content"
@@ -57,6 +58,9 @@ function AppContent() {
             <Route path="/search-browse" element={<SearchBrowse />} />
             <Route path="/channel-info/:channelId" element={<ChannelInfo />} />
           </Routes>
+
+          {/* Mini Player - positioned absolutely above AdBanner */}
+          <MiniPlayer />
         </div>
         <PlayerOverlay />
       </ScreenMemoryProvider>

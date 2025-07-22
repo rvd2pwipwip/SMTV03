@@ -37,6 +37,8 @@ function Home() {
     moveFocusDown,
     getGroupFocusMemory,
     setGroupFocusMemory,
+    MINI_PLAYER_GROUP_INDEX,
+    isMiniPlayerVisible,
   } = useFocusNavigation();
 
   // Group indices
@@ -112,8 +114,21 @@ function Home() {
       filterRefs.current[filtersFocusedIndex]?.focus();
     } else if (focusedGroupIndex === SWIMLANE_GROUP) {
       cardRefs.current[swimlaneFocusedIndex]?.focus();
+    } else if (focusedGroupIndex === MINI_PLAYER_GROUP_INDEX && isMiniPlayerVisible) {
+      // Mini-player manages its own focus internally, just ensure other elements are blurred
+      searchRef.current?.blur();
+      infoRef.current?.blur();
+      // Also blur the currently focused swimlane card
+      cardRefs.current[swimlaneFocusedIndex]?.blur();
     }
-  }, [focusedGroupIndex, headerFocusedIndex, filtersFocusedIndex, swimlaneFocusedIndex]);
+  }, [
+    focusedGroupIndex,
+    headerFocusedIndex,
+    filtersFocusedIndex,
+    swimlaneFocusedIndex,
+    MINI_PLAYER_GROUP_INDEX,
+    isMiniPlayerVisible,
+  ]);
 
   // Blur header buttons when leaving header group
   useEffect(() => {

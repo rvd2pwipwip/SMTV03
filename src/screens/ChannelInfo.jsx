@@ -2,31 +2,40 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { ChannelCard, Button } from '@smtv/tv-component-library';
 import '../styles/App.css';
-import ChannelRow from '../components/ChannelRow';
+
 import KeyboardWrapper from '../components/KeyboardWrapper';
 import { Like, SingNow } from 'stingray-icons';
 import AdBanner from '../components/AdBanner';
 import { getSidePadding } from '../utils/layout';
 import VariableSwimlane from '../components/VariableSwimlane';
+import ChannelRow from '../components/ChannelRow';
 import { fakeChannels } from '../data/fakeChannels';
 import { fakeChannelInfo } from '../data/fakeChannelInfo';
 import { usePlayer } from '../contexts/PlayerContext';
+import { useFocusNavigation } from '../contexts/GroupFocusNavigationContext';
 
 function ChannelInfo() {
   // Player context for overlay functionality
   const { isPlayerOpen, openPlayer, closePlayer } = usePlayer();
 
-  // Use plain refs for focusable elements
+  // Refs for VariableSwimlane items (like Home.jsx)
+  const actionRefs = useRef([]); // For action buttons
+  const filterRefs = useRef([]); // For filter buttons
+
+  // Refs for related channels grid
   const relatedGroupRef = useRef(null);
   const relatedCard1Ref = useRef(null);
   const relatedCard2Ref = useRef(null);
   const relatedCard3Ref = useRef(null);
   const relatedCard4Ref = useRef(null);
   const relatedCard5Ref = useRef(null);
-
-  // Refs for VariableSwimlane items (like Home.jsx)
-  const actionRefs = useRef([]); // For action buttons
-  const filterRefs = useRef([]); // For filter buttons
+  const relatedCardRefs = [
+    relatedCard1Ref,
+    relatedCard2Ref,
+    relatedCard3Ref,
+    relatedCard4Ref,
+    relatedCard5Ref,
+  ];
 
   // Get the channelId from the URL params and the state from the previous screen
   const { channelId } = useParams();
@@ -48,37 +57,95 @@ function ChannelInfo() {
   const FILTERS_GROUP = 1;
   const RELATED_GROUP = 2;
 
-  // Simple focus state - always starts with Play button focused
+  // Navigation context for vertical group focus
+  const {
+    focusedGroupIndex,
+    setFocusedGroupIndex,
+    moveFocusUp,
+    moveFocusDown,
+    MINI_PLAYER_GROUP_INDEX,
+    isMiniPlayerVisible,
+  } = useFocusNavigation();
+
+  // Local focus state for each group - MUST BE DECLARED BEFORE useEffect
   const [actionsFocusedIndex, setActionsFocusedIndex] = useState(0);
   const [filtersFocusedIndex, setFiltersFocusedIndex] = useState(0);
   const [relatedFocusedIndex, setRelatedFocusedIndex] = useState(0);
-  const [focusedGroupIndex, setFocusedGroupIndex] = useState(ACTIONS_GROUP);
 
-  // --- Group navigation handlers ---
-  // Move focus up/down between groups
-  const moveFocusUp = () => {
-    setFocusedGroupIndex(prev => Math.max(prev - 1, 0));
-  };
-  const moveFocusDown = () => {
-    setFocusedGroupIndex(prev => Math.min(prev + 1, 2));
-  };
+  // Initialize focus to ACTIONS_GROUP (Play button) on mount
+  useEffect(() => {
+    // Small delay to ensure component is fully mounted before setting focus
+    const timer = setTimeout(() => {
+      setFocusedGroupIndex(ACTIONS_GROUP);
+    }, 10);
+    return () => clearTimeout(timer);
+  }, [setFocusedGroupIndex]);
 
-  // Keyboard navigation
+  // Add global keyboard listener for navigation
   useEffect(() => {
     const handleKeyDown = e => {
+      // Handle left/right navigation for Related channels
+      if (
+        focusedGroupIndex === RELATED_GROUP &&
+        (e.key === 'ArrowLeft' || e.key === 'ArrowRight')
+      ) {
+        if (e.key === 'ArrowLeft' && relatedFocusedIndex > 0) {
+          const newIndex = relatedFocusedIndex - 1;
+          setRelatedFocusedIndex(newIndex);
+          relatedCardRefs[newIndex].current?.focus();
+          e.preventDefault();
+          e.stopPropagation();
+        } else if (e.key === 'ArrowRight' && relatedFocusedIndex < relatedCardRefs.length - 1) {
+          const newIndex = relatedFocusedIndex + 1;
+          setRelatedFocusedIndex(newIndex);
+          relatedCardRefs[newIndex].current?.focus();
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        return;
+      }
+
+      // Don't interfere with VariableSwimlane left/right navigation for other groups
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        return;
+      }
+
       if (e.key === 'ArrowDown') {
         moveFocusDown();
         e.preventDefault();
+        e.stopPropagation();
       } else if (e.key === 'ArrowUp') {
         moveFocusUp();
         e.preventDefault();
+        e.stopPropagation();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
 
-  // --- Simple focus change handlers ---
+    window.addEventListener('keydown', handleKeyDown, true); // Use capture phase
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [moveFocusUp, moveFocusDown, focusedGroupIndex, relatedFocusedIndex]);
+
+  // Sync DOM focus with app focus for all groups
+  useEffect(() => {
+    if (focusedGroupIndex === ACTIONS_GROUP) {
+      actionRefs.current[actionsFocusedIndex]?.focus();
+    } else if (focusedGroupIndex === FILTERS_GROUP) {
+      filterRefs.current[filtersFocusedIndex]?.focus();
+    } else if (focusedGroupIndex === RELATED_GROUP) {
+      relatedCardRefs[relatedFocusedIndex]?.current?.focus();
+    } else if (focusedGroupIndex === MINI_PLAYER_GROUP_INDEX && isMiniPlayerVisible) {
+      relatedCardRefs.forEach(ref => ref.current?.blur());
+    }
+  }, [
+    focusedGroupIndex,
+    actionsFocusedIndex,
+    filtersFocusedIndex,
+    relatedFocusedIndex,
+    MINI_PLAYER_GROUP_INDEX,
+    isMiniPlayerVisible,
+  ]);
+
+  // --- Focus change handlers ---
   const handleActionFocusChange = index => {
     setActionsFocusedIndex(index);
     setFocusedGroupIndex(ACTIONS_GROUP);
@@ -346,47 +413,62 @@ function ChannelInfo() {
             Related
           </div>
           <ChannelRow ref={relatedGroupRef}>
-            <KeyboardWrapper ref={relatedCard1Ref} data-stable-id="channelinfo-related-card-1">
+            <KeyboardWrapper
+              ref={relatedCard1Ref}
+              data-stable-id="channelinfo-related-card-1"
+              onSelect={handleChannelSelect}
+            >
               <ChannelCard
                 title="Sample Channel 1"
                 thumbnailUrl="https://picsum.photos/300/300?1"
-                onSelect={handleChannelSelect}
                 focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === 0}
                 onFocus={() => handleRelatedFocusChange(0)}
               />
             </KeyboardWrapper>
-            <KeyboardWrapper ref={relatedCard2Ref} data-stable-id="channelinfo-related-card-2">
+            <KeyboardWrapper
+              ref={relatedCard2Ref}
+              data-stable-id="channelinfo-related-card-2"
+              onSelect={handleChannelSelect}
+            >
               <ChannelCard
                 title="Sample Channel 2"
                 thumbnailUrl="https://picsum.photos/300/300?2"
-                onSelect={handleChannelSelect}
                 focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === 1}
                 onFocus={() => handleRelatedFocusChange(1)}
               />
             </KeyboardWrapper>
-            <KeyboardWrapper ref={relatedCard3Ref} data-stable-id="channelinfo-related-card-3">
+            <KeyboardWrapper
+              ref={relatedCard3Ref}
+              data-stable-id="channelinfo-related-card-3"
+              onSelect={handleChannelSelect}
+            >
               <ChannelCard
                 title="Sample Channel 3"
                 thumbnailUrl="https://picsum.photos/300/300?3"
-                onSelect={handleChannelSelect}
                 focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === 2}
                 onFocus={() => handleRelatedFocusChange(2)}
               />
             </KeyboardWrapper>
-            <KeyboardWrapper ref={relatedCard4Ref} data-stable-id="channelinfo-related-card-4">
+            <KeyboardWrapper
+              ref={relatedCard4Ref}
+              data-stable-id="channelinfo-related-card-4"
+              onSelect={handleChannelSelect}
+            >
               <ChannelCard
                 title="Sample Channel 4"
                 thumbnailUrl="https://picsum.photos/300/300?4"
-                onSelect={handleChannelSelect}
                 focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === 3}
                 onFocus={() => handleRelatedFocusChange(3)}
               />
             </KeyboardWrapper>
-            <KeyboardWrapper ref={relatedCard5Ref} data-stable-id="channelinfo-related-card-5">
+            <KeyboardWrapper
+              ref={relatedCard5Ref}
+              data-stable-id="channelinfo-related-card-5"
+              onSelect={handleChannelSelect}
+            >
               <ChannelCard
                 title="Sample Channel 5"
                 thumbnailUrl="https://picsum.photos/300/300?5"
-                onSelect={handleChannelSelect}
                 focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === 4}
                 onFocus={() => handleRelatedFocusChange(4)}
               />
