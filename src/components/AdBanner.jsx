@@ -17,14 +17,16 @@ const AdBanner = ({ children }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 100,
+        zIndex: 250, // Above mini-player (200) to hide focus ring bottom
       }}
     >
       {children || (
-        <span style={{ color: 'var(--color-outline-secondary)', fontSize: 32, fontWeight: 700 }}>Ad Banner Placeholder</span>
+        <span style={{ color: 'var(--color-outline-secondary)', fontSize: 32, fontWeight: 700 }}>
+          Ad Banner Placeholder
+        </span>
       )}
     </div>
   );
 };
 
-export default AdBanner; 
+export default AdBanner;
