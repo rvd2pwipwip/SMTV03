@@ -36,8 +36,8 @@ function Home() {
   const SWIMLANE_GROUP = 2;
 
   // LEARNING: Screen-specific focus group state
-  // Home defaults to FILTERS_GROUP (1) to maintain UX - users typically start browsing filters
-  const focusedGroupIndex = getFocusedGroupIndex(FILTERS_GROUP);
+  // Home defaults to SWIMLANE_GROUP (2) to maintain UX - users typically start browsing channels
+  const focusedGroupIndex = getFocusedGroupIndex(SWIMLANE_GROUP);
 
   // Navigation context for vertical group focus (no longer provides focusedGroupIndex)
   const {
