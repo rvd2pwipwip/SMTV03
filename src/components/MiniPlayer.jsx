@@ -1,19 +1,31 @@
 import React, { useRef, useEffect } from 'react';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useFocusNavigation } from '../contexts/GroupFocusNavigationContext';
+import { useScreenMemory } from '../contexts/ScreenMemoryContext';
+import { useLocation } from 'react-router-dom';
 import KeyboardWrapper from './KeyboardWrapper';
 
 const MiniPlayer = () => {
   const { isPlayerOpen, openPlayer } = usePlayer();
-  const {
-    focusedGroupIndex,
-    MINI_PLAYER_GROUP_INDEX,
-    isMiniPlayerVisible,
-    moveFocusUp,
-    moveFocusDown,
-  } = useFocusNavigation();
+  const { moveFocusUp, moveFocusDown, MINI_PLAYER_GROUP_INDEX, isMiniPlayerVisible } =
+    useFocusNavigation();
   const miniPlayerRef = useRef(null);
+  const location = useLocation();
 
+  // LEARNING: Determine current screen from pathname for screen-specific focus state
+  const getCurrentScreen = () => {
+    const path = location.pathname;
+    if (path.startsWith('/channel-info')) return 'channel-info';
+    if (path.startsWith('/search-browse')) return 'search-browse';
+    return 'home'; // default
+  };
+
+  // Get current screen's focus state
+  const currentScreen = getCurrentScreen();
+  const { getFocusedGroupIndex, setFocusedGroupIndex } = useScreenMemory(currentScreen);
+  const focusedGroupIndex = getFocusedGroupIndex();
+
+  // LEARNING: MiniPlayer is focused when the current screen's focusedGroupIndex matches MINI_PLAYER_GROUP_INDEX
   const isFocused = isMiniPlayerVisible && focusedGroupIndex === MINI_PLAYER_GROUP_INDEX;
 
   // Mock data - will be replaced with actual player state
@@ -21,6 +33,15 @@ const MiniPlayer = () => {
     songTitle: 'Song Title',
     artistName: 'Artist Name',
     isPlaying: true,
+  };
+
+  // LEARNING: Wrapper functions that work with current screen's state
+  const handleMoveFocusUp = () => {
+    moveFocusUp(focusedGroupIndex, setFocusedGroupIndex);
+  };
+
+  const handleMoveFocusDown = () => {
+    moveFocusDown(focusedGroupIndex, setFocusedGroupIndex);
   };
 
   useEffect(() => {
@@ -44,13 +65,13 @@ const MiniPlayer = () => {
 
   const handleUp = e => {
     console.log('Mini-player handleUp called');
-    moveFocusUp();
+    handleMoveFocusUp();
     e.preventDefault();
   };
 
   const handleDown = e => {
     console.log('Mini-player handleDown called');
-    moveFocusDown();
+    handleMoveFocusDown();
     e.preventDefault();
   };
 

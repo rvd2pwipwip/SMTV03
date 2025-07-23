@@ -42,8 +42,9 @@ function SearchBrowse() {
   // Show main browse filters in browse mode, search filters in search mode
   const currentFilters = isSearchMode ? searchResultFilters : browseFilters;
 
-  // Persistent screen memory for activeFilterId
-  const { memory, setField } = useScreenMemory('search-browse');
+  // Persistent screen memory for activeFilterId AND focusedGroupIndex
+  const { memory, setField, getFocusedGroupIndex, setFocusedGroupIndex } =
+    useScreenMemory('search-browse');
   const activeFilterId = memory.activeFilterId || currentFilters[0]?.id;
   const setActiveFilterId = id => setField('activeFilterId', id);
 
@@ -52,9 +53,17 @@ function SearchBrowse() {
   const filterRefs = useRef([]); // For filter buttons
   const cardRefs = useRef([]); // For channel cards
 
-  // Navigation context for vertical group focus
+  // Group indices
+  const HEADER_GROUP = 0;
+  const FILTERS_GROUP = 1;
+  const SWIMLANE_GROUP = 2;
+
+  // LEARNING: Screen-specific focus group state
+  // SearchBrowse defaults to HEADER_GROUP (0) - users typically want to search when arriving
+  const focusedGroupIndex = getFocusedGroupIndex(HEADER_GROUP);
+
+  // Navigation context for vertical group focus (no longer provides focusedGroupIndex)
   const {
-    focusedGroupIndex,
     moveFocusUp,
     moveFocusDown,
     getGroupFocusMemory,
@@ -62,11 +71,6 @@ function SearchBrowse() {
     MINI_PLAYER_GROUP_INDEX,
     isMiniPlayerVisible,
   } = useFocusNavigation();
-
-  // Group indices
-  const HEADER_GROUP = 0;
-  const FILTERS_GROUP = 1;
-  const SWIMLANE_GROUP = 2;
 
   // Header group focus - only search field
   const [headerFocusedIndex, setHeaderFocusedIndex] = useState(0);
@@ -91,6 +95,15 @@ function SearchBrowse() {
   const [swimlaneFocusedIndex, setSwimlaneFocusedIndex] = useState(0);
 
   const navigate = useNavigate();
+
+  // LEARNING: Wrapper functions for navigation that provide screen state
+  const handleMoveFocusUp = () => {
+    moveFocusUp(focusedGroupIndex, setFocusedGroupIndex);
+  };
+
+  const handleMoveFocusDown = () => {
+    moveFocusDown(focusedGroupIndex, setFocusedGroupIndex);
+  };
 
   // Search logic - trigger search on 2nd character
   useEffect(() => {
@@ -241,7 +254,7 @@ function SearchBrowse() {
               }}
               onKeyDown={e => {
                 if (e.key === 'ArrowDown') {
-                  moveFocusDown();
+                  handleMoveFocusDown();
                   e.preventDefault();
                 }
               }}
@@ -274,10 +287,10 @@ function SearchBrowse() {
                 aria-label={filter.label}
                 onKeyDown={e => {
                   if (e.key === 'ArrowDown') {
-                    moveFocusDown();
+                    handleMoveFocusDown();
                     e.preventDefault();
                   } else if (e.key === 'ArrowUp') {
-                    moveFocusUp();
+                    handleMoveFocusUp();
                     e.preventDefault();
                   }
                 }}
@@ -324,8 +337,8 @@ function SearchBrowse() {
                 ref={el => {
                   cardRefs.current[i] = el;
                 }}
-                onUp={moveFocusUp}
-                onDown={moveFocusDown}
+                onUp={handleMoveFocusUp}
+                onDown={handleMoveFocusDown}
               >
                 {isSearchMode ? (
                   <ChannelCard
@@ -357,42 +370,23 @@ function SearchBrowse() {
           />
         )}
 
-        {/* Empty state when no results */}
-        {displayItems.length === 0 && isSearchMode && (
+        {/* Empty state for no results */}
+        {displayItems.length === 0 && (
           <div
             style={{
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              flex: 1,
-              fontSize: '32px',
-              color: '#FAFAFA',
-              opacity: 0.7,
+              minHeight: '200px',
+              color: 'var(--color-text-secondary)',
+              fontSize: 'var(--font-size-body)',
+              fontFamily: 'var(--font-family-primary)',
             }}
           >
-            No results found for "{searchQuery}"
-          </div>
-        )}
-
-        {/* Empty state for browse mode */}
-        {displayItems.length === 0 && !isSearchMode && (
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              flex: 1,
-              fontSize: '32px',
-              color: '#FAFAFA',
-              opacity: 0.7,
-            }}
-          >
-            No categories available
+            {isSearchMode ? 'No results found' : 'Browse categories to discover content'}
           </div>
         )}
       </div>
-
-      {/* Ad banner is outside the navigation context and not focusable */}
       <AdBanner />
     </>
   );

@@ -18,8 +18,8 @@ import { useScreenMemory } from '../contexts/ScreenMemoryContext';
 import { useNavigate } from 'react-router-dom';
 
 function Home() {
-  // Persistent screen memory for activeFilterId
-  const { memory, setField } = useScreenMemory('home');
+  // Persistent screen memory for activeFilterId AND focusedGroupIndex
+  const { memory, setField, getFocusedGroupIndex, setFocusedGroupIndex } = useScreenMemory('home');
   const activeFilterId = memory.activeFilterId || tvHomeFilters[0]?.id;
   // const activeFilterId = memory.activeFilterId || genreFilters[0]?.id;
   const setActiveFilterId = id => setField('activeFilterId', id);
@@ -30,9 +30,17 @@ function Home() {
   const filterRefs = useRef([]); // For filter buttons
   const cardRefs = useRef([]); // For channel cards
 
-  // Navigation context for vertical group focus
+  // Group indices
+  const HEADER_GROUP = 0;
+  const FILTERS_GROUP = 1;
+  const SWIMLANE_GROUP = 2;
+
+  // LEARNING: Screen-specific focus group state
+  // Home defaults to FILTERS_GROUP (1) to maintain UX - users typically start browsing filters
+  const focusedGroupIndex = getFocusedGroupIndex(FILTERS_GROUP);
+
+  // Navigation context for vertical group focus (no longer provides focusedGroupIndex)
   const {
-    focusedGroupIndex,
     moveFocusUp,
     moveFocusDown,
     getGroupFocusMemory,
@@ -40,11 +48,6 @@ function Home() {
     MINI_PLAYER_GROUP_INDEX,
     isMiniPlayerVisible,
   } = useFocusNavigation();
-
-  // Group indices
-  const HEADER_GROUP = 0;
-  const FILTERS_GROUP = 1;
-  const SWIMLANE_GROUP = 2;
 
   // Header group focus
   const [headerFocusedIndex, setHeaderFocusedIndex] = useState(0);
@@ -86,6 +89,16 @@ function Home() {
     navigate(`/channel-info/${channel.id}`, {
       state: { fromHome: true },
     });
+  };
+
+  // LEARNING: Wrapper functions for navigation that provide screen state
+  // These encapsulate the screen-specific state management
+  const handleMoveFocusUp = () => {
+    moveFocusUp(focusedGroupIndex, setFocusedGroupIndex);
+  };
+
+  const handleMoveFocusDown = () => {
+    moveFocusDown(focusedGroupIndex, setFocusedGroupIndex);
   };
 
   // UX ENHANCEMENT: Handle horizontal navigation state tracking
@@ -163,7 +176,7 @@ function Home() {
             justifyContent: 'space-between',
             padding:
               'var(--screen-side-padding) var(--screen-side-padding) 0 var(--screen-side-padding)',
-            minHeight: 90,
+            minHeight: 184,
             boxSizing: 'border-box',
           }}
         >
@@ -199,7 +212,7 @@ function Home() {
                   infoRef.current?.focus();
                   e.preventDefault();
                 } else if (e.key === 'ArrowDown') {
-                  moveFocusDown();
+                  handleMoveFocusDown();
                   e.preventDefault();
                 }
               }}
@@ -224,7 +237,7 @@ function Home() {
                   searchRef.current?.focus();
                   e.preventDefault();
                 } else if (e.key === 'ArrowDown') {
-                  moveFocusDown();
+                  handleMoveFocusDown();
                   e.preventDefault();
                 }
               }}
@@ -249,10 +262,10 @@ function Home() {
               aria-label={filter.label}
               onKeyDown={e => {
                 if (e.key === 'ArrowDown') {
-                  moveFocusDown();
+                  handleMoveFocusDown();
                   e.preventDefault();
                 } else if (e.key === 'ArrowUp') {
-                  moveFocusUp();
+                  handleMoveFocusUp();
                   e.preventDefault();
                 }
                 // UX NOTE: Horizontal navigation within filters is handled by VariableSwimlane
@@ -296,8 +309,8 @@ function Home() {
               ref={el => {
                 cardRefs.current[i] = el;
               }}
-              onUp={moveFocusUp}
-              onDown={moveFocusDown}
+              onUp={handleMoveFocusUp}
+              onDown={handleMoveFocusDown}
             >
               <ChannelCard
                 title={channel.title}

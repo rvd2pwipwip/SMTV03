@@ -8,28 +8,26 @@ import { usePlayer } from './PlayerContext';
  * FocusNavigationContext - modular vertical navigation context for TV UIs
  *
  * Provides:
- * - focusedGroupIndex: which vertical group is focused (header, filters, swimlane, etc)
- * - setFocusedGroupIndex: set focus programmatically
  * - moveFocusUp / moveFocusDown: move focus between groups
  * - groupCount: total number of vertical groups
  * - focusMemory: remembers focusedIndex and offset for each group
  * - setGroupFocusMemory: update memory for a group
  * - getGroupFocusMemory: get memory for a group
+ * - MiniPlayer coordination: isMiniPlayerVisible, MINI_PLAYER_GROUP_INDEX
+ *
+ * IMPORTANT CHANGE: focusedGroupIndex is now managed per-screen via ScreenMemoryContext
+ * Each screen is responsible for managing its own focused group state.
  *
  * Usage:
- * - Wrap your app (or main content) in <FocusNavigationProvider groupCount={3}>
+ * - Wrap your app (or main content) in <FocusNavigationProvider baseGroupCount={3}>
  * - Use useFocusNavigation() in screens/components
- * - Pass focused={focusedGroupIndex === ...} to each group
- * - Call moveFocusUp/moveFocusDown on up/down key events
+ * - Screens manage their own focusedGroupIndex via useScreenMemory()
+ * - Call moveFocusUp/moveFocusDown on up/down key events (screens provide current focusedGroupIndex)
  * - Use setGroupFocusMemory/getGroupFocusMemory for per-group focus/offset memory
  */
 const FocusNavigationContext = createContext();
 
-export function GroupFocusNavigationProvider({
-  baseGroupCount = 3,
-  initialGroupIndex = 0,
-  children,
-}) {
+export function GroupFocusNavigationProvider({ baseGroupCount = 3, children }) {
   // Get mini-player visibility from PlayerContext
   const { isPlayerOpen } = usePlayer();
 
@@ -38,28 +36,31 @@ export function GroupFocusNavigationProvider({
   const groupCount = isMiniPlayerVisible ? baseGroupCount + 1 : baseGroupCount;
   const MINI_PLAYER_GROUP_INDEX = baseGroupCount; // Always the last group (index 3)
 
-  // Which group is currently focused (0 = header, 1 = filters, 2 = swimlane, 3 = mini-player)
-  const [focusedGroupIndex, setFocusedGroupIndex] = useState(initialGroupIndex);
-
-  // Ensure focused group index stays within bounds when group count changes
-  React.useEffect(() => {
-    if (focusedGroupIndex >= groupCount) {
-      setFocusedGroupIndex(groupCount - 1);
-    }
-  }, [groupCount, focusedGroupIndex]);
+  // LEARNING: Removed global focusedGroupIndex - now managed per-screen
+  // Each screen will manage its own focusedGroupIndex via ScreenMemoryContext
 
   // Per-group focus memory: { [groupIndex]: { focusedIndex, offset } }
   const [focusMemory, setFocusMemory] = useState({});
 
+  // LEARNING: Navigation functions now accept currentFocusedGroupIndex as parameter
+  // This allows screens to provide their current state while keeping navigation logic centralized
+
   // Move focus up (to previous group)
-  const moveFocusUp = useCallback(() => {
-    setFocusedGroupIndex(prev => Math.max(prev - 1, 0));
+  const moveFocusUp = useCallback((currentFocusedGroupIndex, setFocusedGroupIndex) => {
+    const newIndex = Math.max(currentFocusedGroupIndex - 1, 0);
+    setFocusedGroupIndex(newIndex);
+    return newIndex;
   }, []);
 
   // Move focus down (to next group)
-  const moveFocusDown = useCallback(() => {
-    setFocusedGroupIndex(prev => Math.min(prev + 1, groupCount - 1));
-  }, [groupCount]);
+  const moveFocusDown = useCallback(
+    (currentFocusedGroupIndex, setFocusedGroupIndex) => {
+      const newIndex = Math.min(currentFocusedGroupIndex + 1, groupCount - 1);
+      setFocusedGroupIndex(newIndex);
+      return newIndex;
+    },
+    [groupCount]
+  );
 
   // Set focus memory for a group
   const setGroupFocusMemory = useCallback((groupIndex, memory) => {
@@ -76,8 +77,7 @@ export function GroupFocusNavigationProvider({
 
   // Context value
   const value = {
-    focusedGroupIndex,
-    setFocusedGroupIndex,
+    // LEARNING: Removed focusedGroupIndex and setFocusedGroupIndex - now per-screen
     moveFocusUp,
     moveFocusDown,
     groupCount,

@@ -13,10 +13,14 @@ import { fakeChannels } from '../data/fakeChannels';
 import { fakeChannelInfo } from '../data/fakeChannelInfo';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useFocusNavigation } from '../contexts/GroupFocusNavigationContext';
+import { useScreenMemory } from '../contexts/ScreenMemoryContext';
 
 function ChannelInfo() {
   // Player context for overlay functionality
   const { isPlayerOpen, openPlayer, closePlayer } = usePlayer();
+
+  // Screen memory for focus state - ChannelInfo defaults to ACTIONS_GROUP (Play button)
+  const { getFocusedGroupIndex, setFocusedGroupIndex } = useScreenMemory('channel-info');
 
   // Refs for VariableSwimlane items (like Home.jsx)
   const actionRefs = useRef([]); // For action buttons
@@ -57,29 +61,40 @@ function ChannelInfo() {
   const FILTERS_GROUP = 1;
   const RELATED_GROUP = 2;
 
-  // Navigation context for vertical group focus
-  const {
-    focusedGroupIndex,
-    setFocusedGroupIndex,
-    moveFocusUp,
-    moveFocusDown,
-    MINI_PLAYER_GROUP_INDEX,
-    isMiniPlayerVisible,
-  } = useFocusNavigation();
+  // LEARNING: Screen-specific focus group state
+  // ChannelInfo defaults to ACTIONS_GROUP (0) - users expect to see Play button first
+  const focusedGroupIndex = getFocusedGroupIndex(ACTIONS_GROUP);
+
+  // Navigation context for vertical group focus (no longer provides focusedGroupIndex)
+  const { moveFocusUp, moveFocusDown, MINI_PLAYER_GROUP_INDEX, isMiniPlayerVisible } =
+    useFocusNavigation();
 
   // Local focus state for each group - MUST BE DECLARED BEFORE useEffect
   const [actionsFocusedIndex, setActionsFocusedIndex] = useState(0);
   const [filtersFocusedIndex, setFiltersFocusedIndex] = useState(0);
   const [relatedFocusedIndex, setRelatedFocusedIndex] = useState(0);
 
+  // LEARNING: Wrapper functions for navigation that provide screen state
+  const handleMoveFocusUp = () => {
+    moveFocusUp(focusedGroupIndex, setFocusedGroupIndex);
+  };
+
+  const handleMoveFocusDown = () => {
+    moveFocusDown(focusedGroupIndex, setFocusedGroupIndex);
+  };
+
   // Initialize focus to ACTIONS_GROUP (Play button) on mount
   useEffect(() => {
-    // Small delay to ensure component is fully mounted before setting focus
+    // LEARNING: No longer needed since getFocusedGroupIndex handles default
+    // Small delay to ensure component is fully mounted, but now just for DOM focus
     const timer = setTimeout(() => {
-      setFocusedGroupIndex(ACTIONS_GROUP);
+      // Ensure we start at ACTIONS_GROUP if this is first visit to this screen
+      if (getFocusedGroupIndex() !== ACTIONS_GROUP) {
+        setFocusedGroupIndex(ACTIONS_GROUP);
+      }
     }, 10);
     return () => clearTimeout(timer);
-  }, [setFocusedGroupIndex]);
+  }, [getFocusedGroupIndex, setFocusedGroupIndex]);
 
   // Add global keyboard listener for navigation
   useEffect(() => {
@@ -111,11 +126,11 @@ function ChannelInfo() {
       }
 
       if (e.key === 'ArrowDown') {
-        moveFocusDown();
+        handleMoveFocusDown();
         e.preventDefault();
         e.stopPropagation();
       } else if (e.key === 'ArrowUp') {
-        moveFocusUp();
+        handleMoveFocusUp();
         e.preventDefault();
         e.stopPropagation();
       }
@@ -123,7 +138,7 @@ function ChannelInfo() {
 
     window.addEventListener('keydown', handleKeyDown, true); // Use capture phase
     return () => window.removeEventListener('keydown', handleKeyDown, true);
-  }, [moveFocusUp, moveFocusDown, focusedGroupIndex, relatedFocusedIndex]);
+  }, [handleMoveFocusUp, handleMoveFocusDown, focusedGroupIndex, relatedFocusedIndex]);
 
   // Sync DOM focus with app focus for all groups
   useEffect(() => {
@@ -326,10 +341,10 @@ function ChannelInfo() {
                   focused={isFocused}
                   onKeyDown={e => {
                     if (e.key === 'ArrowDown') {
-                      moveFocusDown();
+                      handleMoveFocusDown();
                       e.preventDefault();
                     } else if (e.key === 'ArrowUp') {
-                      moveFocusUp();
+                      handleMoveFocusUp();
                       e.preventDefault();
                     }
                   }}
@@ -372,10 +387,10 @@ function ChannelInfo() {
                   focused={isFocused}
                   onKeyDown={e => {
                     if (e.key === 'ArrowDown') {
-                      moveFocusDown();
+                      handleMoveFocusDown();
                       e.preventDefault();
                     } else if (e.key === 'ArrowUp') {
-                      moveFocusUp();
+                      handleMoveFocusUp();
                       e.preventDefault();
                     }
                   }}
