@@ -9,6 +9,7 @@ import { TRANS_BTN_ICON_SIZE } from '../constants/ui';
 import FixedSwimlane from '../components/FixedSwimlane';
 import { fakeChannels } from '../data/fakeChannels';
 import KeyboardWrapper from '../components/KeyboardWrapper';
+import { getChannelsForHomeFilter, hasMoreChannels } from '../utils/homeData';
 import VariableSwimlane from '../components/VariableSwimlane';
 import { tvHomeFilters } from '../data/tvHomeFilters';
 import { genreFilters } from '../data/genreFilters'; // for testing VariableSwimlane
@@ -23,6 +24,10 @@ function Home() {
   const activeFilterId = memory.activeFilterId || tvHomeFilters[0]?.id;
   // const activeFilterId = memory.activeFilterId || genreFilters[0]?.id;
   const setActiveFilterId = id => setField('activeFilterId', id);
+
+  // Get channels for the current filter (limit to 12 to leave room for "More" tile)
+  const currentChannels = getChannelsForHomeFilter(activeFilterId, 12);
+  const showMoreTile = hasMoreChannels(activeFilterId, 12);
 
   // Refs for each group
   const searchRef = useRef(null);
@@ -300,7 +305,7 @@ function Home() {
 
         {/* Swimlane group */}
         <FixedSwimlane
-          items={fakeChannels}
+          items={currentChannels}
           renderItem={(channel, i, focused) => (
             <KeyboardWrapper
               key={channel.id}
