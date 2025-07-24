@@ -11,6 +11,8 @@ import VariableSwimlane from '../components/VariableSwimlane';
 import ChannelRow from '../components/ChannelRow';
 import { fakeChannels } from '../data/fakeChannels';
 import { fakeChannelInfo } from '../data/fakeChannelInfo';
+import { allStingrayChannels } from '../data/stingrayChannelsIndex';
+import { getRelatedChannels } from '../utils/relatedChannels';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useFocusNavigation } from '../contexts/GroupFocusNavigationContext';
 import { useScreenMemory } from '../contexts/ScreenMemoryContext';
@@ -47,8 +49,20 @@ function ChannelInfo() {
   const { state } = location;
   const navigate = useNavigate();
 
-  const channel = fakeChannels.find(c => String(c.id) === String(channelId));
+  // Find channel in unified dataset (includes all mock channels)
+  const channel =
+    allStingrayChannels.find(c => String(c.id) === String(channelId)) ||
+    fakeChannels.find(c => String(c.id) === String(channelId));
+
   const channelInfo = fakeChannelInfo.find(c => String(c.id) === String(channelId));
+
+  // Get related channels using tag-based algorithm
+  const relatedChannels = getRelatedChannels(channelId, 5);
+
+  // Get related channels using tag-based algorithm
+  // Debug: Uncomment to see matching process
+  // console.log(`Related channels for "${channel?.title}":`, relatedChannels.map(c => c.title));
+
   // Fallback: if no tags for this channel, use all unique tags from all channels
   let filterTags = channelInfo?.tags || [];
   if (!filterTags.length && fakeChannelInfo.length > 0) {
@@ -110,7 +124,7 @@ function ChannelInfo() {
           relatedCardRefs[newIndex].current?.focus();
           e.preventDefault();
           e.stopPropagation();
-        } else if (e.key === 'ArrowRight' && relatedFocusedIndex < relatedCardRefs.length - 1) {
+        } else if (e.key === 'ArrowRight' && relatedFocusedIndex < relatedChannels.length - 1) {
           const newIndex = relatedFocusedIndex + 1;
           setRelatedFocusedIndex(newIndex);
           relatedCardRefs[newIndex].current?.focus();
@@ -176,8 +190,12 @@ function ChannelInfo() {
     setFocusedGroupIndex(RELATED_GROUP);
   };
 
-  const handleChannelSelect = () => {
-    console.log('Channel selected');
+  const handleChannelSelect = selectedChannel => {
+    console.log('Channel selected:', selectedChannel.title);
+    // Navigate to the selected channel's info page
+    navigate(`/channel-info/${selectedChannel.id}`, {
+      state: { fromChannelInfo: true },
+    });
   };
 
   return (
@@ -428,66 +446,37 @@ function ChannelInfo() {
             Related
           </div>
           <ChannelRow ref={relatedGroupRef}>
-            <KeyboardWrapper
-              ref={relatedCard1Ref}
-              data-stable-id="channelinfo-related-card-1"
-              onSelect={handleChannelSelect}
-            >
-              <ChannelCard
-                title="Sample Channel 1"
-                thumbnailUrl="https://picsum.photos/300/300?1"
-                focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === 0}
-                onFocus={() => handleRelatedFocusChange(0)}
-              />
-            </KeyboardWrapper>
-            <KeyboardWrapper
-              ref={relatedCard2Ref}
-              data-stable-id="channelinfo-related-card-2"
-              onSelect={handleChannelSelect}
-            >
-              <ChannelCard
-                title="Sample Channel 2"
-                thumbnailUrl="https://picsum.photos/300/300?2"
-                focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === 1}
-                onFocus={() => handleRelatedFocusChange(1)}
-              />
-            </KeyboardWrapper>
-            <KeyboardWrapper
-              ref={relatedCard3Ref}
-              data-stable-id="channelinfo-related-card-3"
-              onSelect={handleChannelSelect}
-            >
-              <ChannelCard
-                title="Sample Channel 3"
-                thumbnailUrl="https://picsum.photos/300/300?3"
-                focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === 2}
-                onFocus={() => handleRelatedFocusChange(2)}
-              />
-            </KeyboardWrapper>
-            <KeyboardWrapper
-              ref={relatedCard4Ref}
-              data-stable-id="channelinfo-related-card-4"
-              onSelect={handleChannelSelect}
-            >
-              <ChannelCard
-                title="Sample Channel 4"
-                thumbnailUrl="https://picsum.photos/300/300?4"
-                focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === 3}
-                onFocus={() => handleRelatedFocusChange(3)}
-              />
-            </KeyboardWrapper>
-            <KeyboardWrapper
-              ref={relatedCard5Ref}
-              data-stable-id="channelinfo-related-card-5"
-              onSelect={handleChannelSelect}
-            >
-              <ChannelCard
-                title="Sample Channel 5"
-                thumbnailUrl="https://picsum.photos/300/300?5"
-                focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === 4}
-                onFocus={() => handleRelatedFocusChange(4)}
-              />
-            </KeyboardWrapper>
+            {relatedChannels.length > 0 ? (
+              relatedChannels.map((relatedChannel, index) => (
+                <KeyboardWrapper
+                  key={relatedChannel.id}
+                  ref={relatedCardRefs[index]}
+                  data-stable-id={`channelinfo-related-card-${index + 1}`}
+                  onSelect={() => handleChannelSelect(relatedChannel)}
+                  selectData={relatedChannel}
+                >
+                  <ChannelCard
+                    title={relatedChannel.title}
+                    thumbnailUrl={relatedChannel.thumbnailUrl}
+                    focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === index}
+                    onFocus={() => handleRelatedFocusChange(index)}
+                    onClick={() => handleChannelSelect(relatedChannel)}
+                  />
+                </KeyboardWrapper>
+              ))
+            ) : (
+              // Fallback when no related channels found
+              <div
+                style={{
+                  color: 'var(--color-text-secondary)',
+                  fontFamily: 'var(--font-family-primary)',
+                  fontSize: 'var(--font-size-body)',
+                  padding: '20px 0',
+                }}
+              >
+                No related channels found
+              </div>
+            )}
           </ChannelRow>
         </div>
       </div>

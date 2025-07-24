@@ -2,7 +2,8 @@ export const fakeChannelInfo = [
   {
     id: 'massive-classic-rock',
     title: 'Massive Classic Rock',
-    description: 'A collection of timeless rock classics to start the day off right. Tracks by Cream, Bowie, Queen, Led Zeppelin, and so many more, will have you wishing for a longer commute!',
+    description:
+      'A collection of timeless rock classics to start the day off right. Tracks by Cream, Bowie, Queen, Led Zeppelin, and so many more, will have you wishing for a longer commute!',
     thumbnail: 'https://picsum.photos/seed/classicrock/400/225',
     tags: [
       { id: 'rock', label: 'Rock' },
@@ -19,5 +20,116 @@ export const fakeChannelInfo = [
       { id: 'party', label: 'Party!' },
     ],
   },
-  // Add more channel objects as needed
-]; 
+  {
+    id: 'todays-top-40',
+    title: "Today's Top 40",
+    description:
+      'The biggest hits dominating the charts right now. Your daily dose of the most popular songs across all genres.',
+    thumbnail: 'https://picsum.photos/seed/top40/400/225',
+    tags: [
+      { id: 'top40', label: 'Top 40' },
+      { id: 'currenthits', label: 'Current Hits' },
+      { id: 'charts', label: 'Charts' },
+      { id: 'pop', label: 'Pop' },
+      { id: 'trendy', label: 'Trendy' },
+      { id: 'mainstream', label: 'Mainstream' },
+      { id: 'radio', label: 'Radio Friendly' },
+    ],
+  },
+  {
+    id: 'tiktok-radio',
+    title: 'TikTok Radio',
+    description:
+      'The sounds of social media. Viral hits, trending tracks, and the songs everyone is talking about online.',
+    thumbnail: 'https://picsum.photos/seed/tiktok/400/225',
+    tags: [
+      { id: 'tiktok', label: 'TikTok' },
+      { id: 'viral', label: 'Viral' },
+      { id: 'socialmedia', label: 'Social Media' },
+      { id: 'trending', label: 'Trending' },
+      { id: 'genz', label: 'Gen Z' },
+      { id: 'dance', label: 'Dance' },
+      { id: 'party', label: 'Party!' },
+    ],
+  },
+  {
+    id: 'ultimate-70s-classic-rock-collection',
+    title: "Ultimate '70s Classic Rock Collection",
+    description:
+      'The definitive collection of 1970s rock classics. Led Zeppelin, Pink Floyd, The Who, and more legendary acts.',
+    thumbnail: 'https://picsum.photos/seed/70srock/400/225',
+    tags: [
+      { id: '1970s', label: '1970s' },
+      { id: 'classicrock', label: 'Classic Rock' },
+      { id: 'legendary', label: 'Legendary' },
+      { id: 'rock', label: 'Rock' },
+      { id: 'ultimate', label: 'Ultimate Collection' },
+      { id: 'nostalgic', label: 'Nostalgic' },
+      { id: 'powerful', label: 'Powerful' },
+    ],
+  },
+  {
+    id: 'remember-the-80s',
+    title: "Remember the 80's",
+    description:
+      'Take a nostalgic trip back to the iconic 1980s. Synth-pop, new wave, and classic hits that defined a revolutionary decade.',
+    thumbnail: 'https://picsum.photos/seed/80s/400/225',
+    tags: [
+      { id: '1980s', label: '1980s' },
+      { id: 'synthpop', label: 'Synth-Pop' },
+      { id: 'newwave', label: 'New Wave' },
+      { id: 'nostalgic', label: 'Nostalgic' },
+      { id: 'iconic', label: 'Iconic' },
+      { id: 'retro', label: 'Retro' },
+      { id: 'dance', label: 'Dance' },
+    ],
+  },
+  {
+    id: 'smooth-jazz',
+    title: 'Smooth Jazz',
+    description:
+      'Silky smooth jazz that soothes the soul. Perfect background music for sophisticated moments.',
+    thumbnail: 'https://picsum.photos/seed/smoothjazz/400/225',
+    tags: [
+      { id: 'smoothjazz', label: 'Smooth Jazz' },
+      { id: 'jazz', label: 'Jazz' },
+      { id: 'sophisticated', label: 'Sophisticated' },
+      { id: 'relaxation', label: 'Relaxation' },
+      { id: 'background', label: 'Background Music' },
+      { id: 'soothing', label: 'Soothing' },
+      { id: 'elegant', label: 'Elegant' },
+    ],
+  },
+  {
+    id: 'hip-hop-rnb',
+    title: 'Hip-Hop/R&B',
+    description:
+      'The best of both worlds - hip-hop beats and R&B soul. Contemporary urban music that defines the genre.',
+    thumbnail: 'https://picsum.photos/seed/hiphoprnb/400/225',
+    tags: [
+      { id: 'hiphop', label: 'Hip-Hop' },
+      { id: 'rnb', label: 'R&B' },
+      { id: 'urban', label: 'Urban' },
+      { id: 'contemporary', label: 'Contemporary' },
+      { id: 'soul', label: 'Soul' },
+      { id: 'beats', label: 'Beats' },
+      { id: 'groove', label: 'Groove' },
+    ],
+  },
+  {
+    id: 'meditation-music',
+    title: 'Meditation Music',
+    description:
+      'Specially curated sounds for meditation and mindfulness. Ambient textures and gentle tones for inner peace.',
+    thumbnail: 'https://picsum.photos/seed/meditation/400/225',
+    tags: [
+      { id: 'meditation', label: 'Meditation' },
+      { id: 'mindfulness', label: 'Mindfulness' },
+      { id: 'ambient', label: 'Ambient' },
+      { id: 'zen', label: 'Zen' },
+      { id: 'spiritual', label: 'Spiritual' },
+      { id: 'peaceful', label: 'Peaceful' },
+      { id: 'relaxation', label: 'Relaxation' },
+    ],
+  },
+];

@@ -17,12 +17,25 @@ import {
   getTrendingRecommendations,
 } from './recommendationsChannels';
 
-// Combined dataset
-export const allStingrayChannels = [
+// Helper function to deduplicate channels by ID
+const deduplicateChannels = channels => {
+  const seen = new Set();
+  return channels.filter(channel => {
+    if (seen.has(channel.id)) {
+      return false;
+    }
+    seen.add(channel.id);
+    return true;
+  });
+};
+
+// Combined dataset with duplicates removed
+// Priority: Most Popular > New Releases > Recommendations
+export const allStingrayChannels = deduplicateChannels([
   ...stingrayChannels,
   ...newReleasesChannels,
   ...recommendationsChannels,
-];
+]);
 
 // Export individual datasets
 export { stingrayChannels as mostPopularChannels } from './realStingrayChannels';
@@ -96,17 +109,37 @@ export const getRandomChannels = (count = 6) => {
 
 // Content stats
 export const getChannelStats = () => {
+  const originalTotal =
+    stingrayChannels.length + newReleasesChannels.length + recommendationsChannels.length;
+  const duplicatesRemoved = originalTotal - allStingrayChannels.length;
+
   return {
     totalChannels: allStingrayChannels.length,
     mostPopular: stingrayChannels.length,
     newReleases: newReleasesChannels.length,
     recommendations: recommendationsChannels.length,
+    originalTotal,
+    duplicatesRemoved,
     totalGenres: [...new Set(allStingrayChannels.map(c => c.genre))].length,
     francophoneChannels: getFrancophoneNewReleases().length,
     bestOf2025: getBestOf2025Channels().length,
     retroChannels: getRetroRecommendations().length,
     workoutChannels: getWorkoutRecommendations().length,
   };
+};
+
+// Debug function to find any remaining duplicates
+export const findDuplicateChannels = () => {
+  const idCounts = {};
+  allStingrayChannels.forEach(channel => {
+    idCounts[channel.id] = (idCounts[channel.id] || 0) + 1;
+  });
+
+  const duplicates = Object.entries(idCounts)
+    .filter(([id, count]) => count > 1)
+    .map(([id, count]) => ({ id, count }));
+
+  return duplicates;
 };
 
 // Export everything for easy importing
