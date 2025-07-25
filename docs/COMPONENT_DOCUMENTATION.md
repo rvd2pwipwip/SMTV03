@@ -1,312 +1,387 @@
-# TV Component Library Documentation
+# TV App Component Documentation
 
 ## Overview
 
-### Project Information
+This document catalogs the reusable components used in our TV application and their integration with our custom keyboard navigation system.
 
-- **Repository**: [tv-component-library](https://github.com/rvd2pwipwip/tv-component-library)
-- **Purpose**: Reusable TV components with TV-specific considerations
-- **Status**: Initial setup phase
-- **Version**: _[Add your current version here, e.g., 1.0.0]_ <!-- Add versioning info for future reference -->
+## Architecture Principles
 
-## Design Philosophy
+### Navigation Philosophy
 
-### Building Blocks Approach
-
-Components are designed as simple, reusable building blocks that:
-
-- Maintain focus and simplicity
-- Enable flexible composition
-- Follow design system best practices
-- Support easy testing and documentation
-
-### Navigation and Interactivity
-
-- Navigation managed at application level
-- Components remain simple and predictable
-- Parent components handle navigation patterns
-- Applications implement custom navigation
-
-## Component Categories
-
-### 1. Navigation Components
-
-- **TVMenu**
-
-  - Purpose: Main navigation menu
-  - Features:
-    - Focus management using Norigin Spatial Navigation
-    - Keyboard navigation
-    - Visual feedback
-  - Props:
-    - items: Array of menu items
-    - onSelect: Selection handler
-    - currentFocus: Active item
-  - **Example:**
-    ```jsx
-    <TVMenu
-      items={[{ label: 'Home' }, { label: 'Channels' }]}
-      onSelect={handleMenuSelect}
-      currentFocus={focusKey}
-    />
-    ```
-
-- **TVMenuItem**
-  - Purpose: Individual menu item
-  - Features:
-    - Focus styles
-    - Selection feedback
-    - Icon support
-  - Props:
-    - label: Item text
-    - icon: Optional icon
-    - isSelected: Selection state
-    - onSelect: Click handler
-
-### 2. Content Components
-
-- **TVSwimlane**
-
-  - Purpose: Horizontal scrollable content container
-  - Features:
-    - Single row of focusable items
-    - Smooth horizontal scrolling
-    - Focus management with Norigin
-    - Category-specific content
-  - Props:
-    - title: Category title
-    - items: Array of content items
-    - onItemSelect: Selection handler
-  - **Example:**
-    ```jsx
-    <TVSwimlane title="Featured" items={channelList} onItemSelect={handleChannelSelect} />
-    ```
-
-- **TVCard**
-  - Purpose: Content container
-  - Features:
-    - Rounded corners square aspect ratio thumbnail
-    - Focus display around thumbnail only
-    - Card label text left aligned below thumbnail
-    - 2-line max text label
-    - Image optimization
-    - Metadata display
-  - Props:
-    - title: Card title
-    - content: Main content
-    - image: Optional image
-    - metadata: Additional info
-  - **Example:**
-    ```jsx
-    <TVCard title="Channel 1" image="/images/channel1.png" metadata={{ viewers: 1200 }} />
-    ```
-
-### 3. Interactive Components
-
-- **TVButton**
-  - Purpose: Interactive button
-  - Features:
-    - Focus states
-    - Keyboard interaction
-    - Visual feedback
-    - **Consistent icon sizing for transparent variant**
-  - Props:
-    - label: Button text
-    - onClick: Click handler
-    - variant: Style variant
-    - size: Button size
-    - icon: Icon element
-  - **Available Variants:**
-    - `"primary"`
-    - `"secondary"`
-    - `"ButtonTransparent"` (for icon-only or minimal buttons)
-  - **Example:**
-    ```jsx
-    <Button
-      icon={<Info style={{ width: TRANS_BTN_ICON_SIZE, height: TRANS_BTN_ICON_SIZE }} />}
-      showIcon
-      size="medium"
-      variant="ButtonTransparent"
-      onClick={handleInfo}
-    >
-      Info
-    </Button>
-    ```
-
-#### Icon Sizing for Transparent Buttons
-
-To ensure consistent icon sizing for all transparent buttons across the app, use the shared JS constant `TRANS_BTN_ICON_SIZE` defined in `src/constants/ui.js`:
-
-```js
-// src/constants/ui.js
-export const TRANS_BTN_ICON_SIZE = 44; // px
-```
-
-When using a transparent button with an icon:
-
-```js
-import { TRANS_BTN_ICON_SIZE } from '../constants/ui';
-<Button
-  icon={<Info style={{ width: TRANS_BTN_ICON_SIZE, height: TRANS_BTN_ICON_SIZE }} />}
-  showIcon
-  size="medium"
-  variant="ButtonTransparent"
-/>;
-```
-
-To update the icon size for all transparent buttons, change the value of `TRANS_BTN_ICON_SIZE` in one place.
-
-- **TVTextInput (Future Development)**
-  - Purpose: TV-optimized text input component
-  - **Status**: Planned for future development
-  - **Rationale**: Native HTML input elements require complex focus management workarounds for TV interfaces
-  - Features (Planned):
-    - Custom implementation designed for remote control navigation
-    - Simplified focus management without browser input complications
-    - Built-in TV-specific styling and behavior
-    - Integration with Norigin Spatial Navigation
-    - Custom cursor and text selection handling
-    - Support for TV-specific input patterns
-  - **Alternative Approaches:**
-    - ContentEditable div with custom text handling
-    - Canvas-based text rendering with custom input logic
-    - React component with keyboard event management
-  - **Current Workaround**:
-    - Using native HTML input with extensive focus management
-    - Requires complex state tracking for proper TV navigation
-    - See `TV_INPUT_CONSIDERATIONS.md` for detailed analysis
-
-## Implementation Guidelines
+- **Vertical Group Navigation**: Managed by `GroupFocusNavigationContext`
+- **Horizontal Navigation**: Handled by individual components (swimlanes, button groups)
+- **Focus Memory**: Persistent per-screen using `ScreenMemoryContext`
+- **TV-Optimized**: Designed for remote control and 10ft viewing distance
 
 ### Component Responsibilities
 
-Components should:
+- **Components**: Handle their own horizontal navigation and focus states
+- **Screens**: Manage vertical navigation between component groups using array-based definitions
+- **Contexts**: Provide navigation state management and focus memory
 
-- Handle their own styling and layout
-- Manage their internal state
-- Provide clear props for customization
-- Be accessible and keyboard-focusable
-- Not implement complex navigation logic
+## Core Navigation Components
 
-### Parent Component Responsibilities
+### FixedSwimlane
 
-Parent components should:
+**Purpose**: Horizontal scrolling container for fixed-width items (e.g., channel cards)
 
-- Implement navigation patterns
-- Manage focus and keyboard events
-- Handle component composition
-- Define interaction patterns
+**Features**:
+
+- Fixed card width (300px) with consistent spacing
+- Dynamic viewport measurement for responsive layouts
+- Built-in horizontal keyboard navigation (left/right arrows)
+- Focus memory and restoration
+- Smooth scrolling animations with parking logic
+
+**Props**:
+
+```jsx
+{
+  items: Array,           // Items to display
+  renderItem: Function,   // (item, index, focused) => JSX
+  focused: Boolean,       // Is this swimlane currently focused?
+  focusedIndex: Number,   // Which item is focused
+  onFocusChange: Function,// (index) => void
+  onSelect: Function,     // (item, index) => void
+  width: String,          // '100%' | '1200px' etc.
+  sidePadding: Number,    // Left/right padding in px
+  maxItems: Number,       // Limit displayed items
+  fallbackItem: JSX       // Displayed when no items
+}
+```
+
+**Example**:
+
+```jsx
+<FixedSwimlane
+  items={channels}
+  renderItem={(channel, i, focused) => (
+    <ChannelCard
+      title={channel.title}
+      thumbnailUrl={channel.thumbnailUrl}
+      focused={focused}
+      onClick={() => onChannelSelect(channel)}
+    />
+  )}
+  focused={focusedGroupIndex === SWIMLANE_GROUP}
+  focusedIndex={swimlaneFocusedIndex}
+  onFocusChange={setSwimlaneFocusedIndex}
+  onSelect={onChannelSelect}
+  sidePadding={getSidePadding()}
+/>
+```
+
+### VariableSwimlane
+
+**Purpose**: Horizontal scrolling container for variable-width items (e.g., filter buttons)
+
+**Features**:
+
+- Dynamic item width measurement
+- Automatic "More" item when content exceeds available space
+- Built-in horizontal keyboard navigation
+- Responsive width calculation
+- Focus memory and restoration
+
+**Props**:
+
+```jsx
+{
+  items: Array,              // Items to display
+  renderItem: Function,      // (item, index, focused) => JSX
+  renderMoreItem: Function,  // (focused) => JSX (optional)
+  focused: Boolean,          // Is this swimlane currently focused?
+  focusedIndex: Number,      // Which item is focused
+  onFocusChange: Function,   // (index) => void
+  onSelect: Function,        // (item, index) => void
+  width: String,             // '100%' | '80%' etc.
+  sidePadding: Number,       // Left/right padding in px
+  maxContentWidthRatio: Number // Max content width vs viewport
+}
+```
+
+**Example**:
+
+```jsx
+<VariableSwimlane
+  items={filters}
+  renderItem={(filter, i, focused) => (
+    <Button
+      variant={filter.active ? 'primary' : 'secondary'}
+      focused={focused}
+      onClick={() => setActiveFilter(filter.id)}
+    >
+      {filter.label}
+    </Button>
+  )}
+  focused={focusedGroupIndex === FILTERS_GROUP}
+  focusedIndex={filtersFocusedIndex}
+  onFocusChange={setFiltersFocusedIndex}
+  onSelect={handleFilterSelect}
+  sidePadding={getSidePadding()}
+/>
+```
+
+### KeyboardWrapper
+
+**Purpose**: Adds keyboard navigation to any child component
+
+**Features**:
+
+- Wraps any component to make it TV-navigable
+- Supports all arrow keys plus Enter/Space
+- Maintains proper ref forwarding
+- Does not interfere with child component behavior
+
+**Props**:
+
+```jsx
+{
+  children: ReactNode,    // Component to wrap
+  onEnter: Function,      // (event) => void
+  onUp: Function,         // (event) => void
+  onDown: Function,       // (event) => void
+  onLeft: Function,       // (event) => void
+  onRight: Function,      // (event) => void
+  onEscape: Function,     // (event) => void
+  tabIndex: Number        // Default: 0
+}
+```
+
+**Example**:
+
+```jsx
+<KeyboardWrapper onEnter={handleSelect} onUp={handleVerticalNav} onDown={handleVerticalNav}>
+  <ChannelCard title="Channel 1" focused={focused} onClick={handleSelect} />
+</KeyboardWrapper>
+```
+
+## Layout Components
+
+### VerticalScrollPadding
+
+**Purpose**: Adds vertical space for overlay-aware scrolling
+
+**Features**:
+
+- Ensures bottom content can scroll above overlays
+- Uses global `AD_BANNER_HEIGHT` constant
+- Reads spacing from CSS design tokens
+- Prevents focus events with `pointer-events: none`
+
+**Props**:
+
+```jsx
+{
+  spacingXXL: Number; // Additional spacing in px
+}
+```
+
+**Example**:
+
+```jsx
+<VerticalScrollPadding spacingXXL={getSpacingXXL()} />
+```
+
+### AdBanner
+
+**Purpose**: Fixed overlay at bottom of screen
+
+**Features**:
+
+- Uses global `AD_BANNER_HEIGHT` constant
+- Positioned absolutely at bottom
+- High z-index for overlay behavior
+
+## External Components
+
+### Button (from @smtv/tv-component-library)
+
+**Purpose**: TV-optimized interactive buttons
+
+**Variants**:
+
+- `primary`: Main action buttons
+- `secondary`: Secondary actions, filters
+- `transparent`: Icon-only or minimal buttons
+
+**Key Features**:
+
+- Built-in focus states optimized for TV
+- Icon support with consistent sizing
+- Proper accessibility attributes
+
+### ChannelCard (from @smtv/tv-component-library)
+
+**Purpose**: Displays channel information with thumbnail
+
+**Features**:
+
+- Square aspect ratio thumbnails
+- Focus ring around thumbnail only
+- 2-line text labels
+- TV-optimized sizing and spacing
+
+## Navigation Patterns
+
+### Array-Based Group Definition
+
+**Best Practice**: Define navigation groups as an array for scalability
+
+```jsx
+const groups = [
+  {
+    type: 'header',
+    render: () => <Header ... />
+  },
+  {
+    type: 'filters',
+    render: () => <VariableSwimlane ... />
+  },
+  {
+    type: 'content',
+    render: () => <FixedSwimlane ... />
+  }
+];
+
+// Set group count dynamically
+useEffect(() => {
+  setGroupCount(groups.length);
+}, [setGroupCount, groups.length]);
+
+// Render groups
+return (
+  <div>
+    {groups.map((group, i) => (
+      <div key={group.type}>
+        {group.render()}
+      </div>
+    ))}
+  </div>
+);
+```
+
+### Screen-Level Navigation Implementation
+
+```jsx
+function MyScreen() {
+  const {
+    focusedGroupIndex,
+    setGroupCount,
+    moveFocusUp,
+    moveFocusDown,
+    getGroupFocusMemory,
+    setGroupFocusMemory,
+  } = useFocusNavigation();
+
+  // Define groups
+  const groups = [
+    /* ... */
+  ];
+
+  // Set group count
+  useEffect(() => {
+    setGroupCount(groups.length);
+  }, [setGroupCount, groups.length]);
+
+  // Handle vertical navigation
+  useEffect(() => {
+    const handleKeyDown = e => {
+      if (e.key === 'ArrowDown') {
+        moveFocusDown();
+        e.preventDefault();
+      } else if (e.key === 'ArrowUp') {
+        moveFocusUp();
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [moveFocusUp, moveFocusDown]);
+
+  // Render groups...
+}
+```
+
+## Utility Functions
+
+### getSidePadding()
+
+**Purpose**: Reads screen side padding from CSS design tokens
+**Location**: `src/utils/layout.js`
+**Usage**: Consistent horizontal spacing for swimlanes
+
+```jsx
+import { getSidePadding } from '../utils/layout';
+
+<FixedSwimlane sidePadding={getSidePadding()} ... />
+```
+
+### getSpacingXXL()
+
+**Purpose**: Reads extra-large spacing from CSS design tokens
+**Usage**: Consistent vertical spacing for scroll padding
 
 ## Design System Integration
 
-### Shared Design Tokens
+### Constants
 
-- Colors
-- Typography
-- Spacing
-- Focus states
-- **Icon sizing constant for transparent buttons**
+- `AD_BANNER_HEIGHT`: Global overlay height (150px)
+- `TRANS_BTN_ICON_SIZE`: Consistent icon sizing for transparent buttons
 
-**Note:**
+### CSS Design Tokens
 
-> Always import the design tokens CSS in your app entry point (e.g., `main.jsx` or `App.jsx`) to ensure all components are styled correctly:
->
-> ```js
-> import '@smtv/design-tokens/dist/design-tokens.css';
-> ```
+- `--screen-side-padding`: Horizontal safe area
+- `--spacing-xxl`: Large vertical spacing
+- Component library tokens for colors, typography, focus states
 
 ### TV-Specific Considerations
 
-- Fixed viewport (1920x1080)
-- Remote control navigation
-- Clear focus states
-- 10ft viewing distance
+- 1920x1080 fixed viewport
+- 10ft viewing distance optimization
+- Remote control navigation patterns
+- Clear focus indicators with scaling/rings
+- Overlay-aware scrolling
 
-## Development Guidelines
+## Testing Guidelines
 
-### Focus Management
+### Component Testing
 
-- Every interactive component must use Norigin Spatial Navigation
-- Implement proper focus tree structure
-- Support keyboard navigation
-- Handle focus restoration
+- Unit tests for navigation logic
+- Focus state verification
+- Keyboard event handling
+- Accessibility compliance
 
-### Accessibility Requirements
+### Integration Testing
 
-- Include ARIA labels
-- Support screen readers
-- Maintain proper focus order
-- Ensure clear focus indicators
-- Follow TV-specific accessibility guidelines
+- Cross-component navigation flow
+- Focus memory restoration
+- Screen transition handling
+- Overlay behavior verification
 
-### Spatial Navigation Integration
+## Best Practices
 
-- Use `useFocusable` hook for focusable components
-- Implement `FocusContext.Provider` for containers
-- Handle focus tree hierarchy
-- Manage focus restoration
-- Support directional navigation
-- Implement proper focus styles
+### Component Development
 
-## Migration Plan
+1. **Copy working patterns** from existing components
+2. **Test keyboard navigation** immediately after changes
+3. **Use consistent prop patterns** (focused, focusedIndex, onFocusChange)
+4. **Follow TV UX guidelines** from `TV_NAVIGATION_PATTERNS.md`
 
-### Phase 1: Core Components
+### Navigation Implementation
 
-1. **ChannelCard**
+1. **Start with array-based group definition**
+2. **Use contexts for state management**
+3. **Separate horizontal and vertical navigation concerns**
+4. **Always implement focus memory**
 
-   - Move from `src/components/ChannelCard.jsx`
-   - Include styles and stories
-   - Document usage and variants
+### Performance
 
-2. **TVSwimlane**
-   - Move from `src/components/TVSwimlane.jsx`
-   - Include styles and stories
-   - Document usage and variants
+1. **Use React.memo** for frequently re-rendered components
+2. **Optimize scroll calculations** with proper viewport measurement
+3. **Implement lazy loading** for large item lists
 
-### Phase 2: Navigation Components
+---
 
-1. **Header**
-2. **Category Navigation**
-3. **Mode Switcher**
-
-### Phase 3: Player Components
-
-1. **Mini Player**
-2. **Player Controls**
-3. **Progress Bar**
-
-## Development Workflow
-
-### Component Development Process
-
-1. Create component file
-2. Implement basic functionality
-3. Add TV-specific features
-4. Test keyboard navigation
-5. Verify accessibility
-6. Document props and usage
-7. Add to component library
-
-### Testing Requirements
-
-- Unit tests for component logic
-- Integration tests for navigation
-- Accessibility testing
-- Performance testing
-- Remote control testing
-
-## Documentation
-
-### Component Library
-
-- Storybook documentation
-- Usage examples
-- Props documentation
-- Accessibility guidelines
-
-### TV App
-
-- Component usage
-- Integration patterns
-- Customization options
-- Migration guides
+_For detailed navigation patterns and debugging guidance, see `TV_NAVIGATION_PATTERNS.md`_
+_For specific component design decisions, see `KEYBOARD_WRAPPER_DESIGN.md`_
