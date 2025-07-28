@@ -4,6 +4,7 @@
 :root {
   --screen-side-padding: 100px;
   --ad-banner-height: 150px;
+  --mini-player-height: 120px;
 }
 
 #root {

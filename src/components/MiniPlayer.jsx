@@ -83,7 +83,7 @@ const MiniPlayer = () => {
         left: '50%',
         transform: 'translateX(-50%) translateY(0%)',
         width: '1000px',
-        height: '120px',
+        height: 'var(--mini-player-height)',
         zIndex: 200, // Below AdBanner (250) so focus ring bottom is hidden
         transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         pointerEvents: 'auto',
