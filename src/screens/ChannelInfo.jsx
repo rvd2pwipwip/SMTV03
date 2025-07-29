@@ -18,39 +18,31 @@ import { useFocusNavigation } from '../contexts/GroupFocusNavigationContext';
 import { useScreenMemory } from '../contexts/ScreenMemoryContext';
 
 function ChannelInfo() {
-  // Player context for overlay functionality
-  const { isPlayerOpen, openPlayer, closePlayer } = usePlayer();
-
-  // Screen memory for focus state - ChannelInfo defaults to ACTIONS_GROUP (Play button)
-  const { getFocusedGroupIndex, setFocusedGroupIndex } = useScreenMemory('channel-info');
-
-  // Refs for VariableSwimlane items (like Home.jsx)
-  const actionRefs = useRef([]); // For action buttons
-  const filterRefs = useRef([]); // For filter buttons
-
-  // Refs for related channels grid
-  const relatedGroupRef = useRef(null);
-  const relatedCard1Ref = useRef(null);
-  const relatedCard2Ref = useRef(null);
-  const relatedCard3Ref = useRef(null);
-  const relatedCard4Ref = useRef(null);
-  const relatedCard5Ref = useRef(null);
-  const relatedCardRefs = [
-    relatedCard1Ref,
-    relatedCard2Ref,
-    relatedCard3Ref,
-    relatedCard4Ref,
-    relatedCard5Ref,
-  ];
-
-  // Ref for the main content container to handle scrolling
-  const contentRef = useRef(null);
-
   // Get the channelId from the URL params and the state from the previous screen
   const { channelId } = useParams();
   const location = useLocation();
   const { state } = location;
   const navigate = useNavigate();
+
+  // Player context for overlay functionality
+  const { isPlayerOpen, openPlayer, closePlayer } = usePlayer();
+
+  // Channel-specific memory for focus state - each channel remembers its own focus
+  // Default to ACTIONS_GROUP (Play button) for new channels, remember last position for returning
+  const { memory, setField, getFocusedGroupIndex, setFocusedGroupIndex } = useScreenMemory(
+    `channel-info-${channelId}`
+  );
+
+  // Refs for VariableSwimlane items (like Home.jsx)
+  const actionRefs = useRef([]); // For action buttons
+  const filterRefs = useRef([]); // For filter buttons
+  const relatedCardRefs = useRef([]); // For related channel cards (like Home.jsx)
+
+  // Ref for related channels group
+  const relatedGroupRef = useRef(null);
+
+  // Ref for the main content container to handle scrolling
+  const contentRef = useRef(null);
 
   // Find channel in unified dataset (includes all mock channels)
   const channel =
@@ -82,199 +74,154 @@ function ChannelInfo() {
   // ChannelInfo defaults to ACTIONS_GROUP (0) - users expect to see Play button first
   const focusedGroupIndex = getFocusedGroupIndex(ACTIONS_GROUP);
 
-  // DEBUG: Verify this code is loaded and track what's causing remounts
-  console.log('🚀 [DEBUG] ChannelInfo component loaded with debug code!', {
-    focusedGroupIndex,
-    filterTagsLength: filterTags.length,
-    channelId,
-    channel: channel?.title,
-    locationKey: location.key,
-    locationState: location.state,
-  });
-
-  // DEBUG: Add global listener to see ALL keydown events
-  useEffect(() => {
-    const globalKeyListener = e => {
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-        console.log('🌍 [DEBUG] GLOBAL keydown detected:', {
-          key: e.key,
-          target: e.target,
-          targetType: e.target.tagName,
-          targetClasses: e.target.className,
-          currentTarget: e.currentTarget,
-          phase: e.eventPhase,
-          defaultPrevented: e.defaultPrevented,
-          propagationStopped: e.cancelBubble,
-        });
-      }
-    };
-
-    // Add both capture and bubble listeners
-    window.addEventListener('keydown', globalKeyListener, true); // Capture
-    window.addEventListener('keydown', globalKeyListener, false); // Bubble
-
-    return () => {
-      window.removeEventListener('keydown', globalKeyListener, true);
-      window.removeEventListener('keydown', globalKeyListener, false);
-    };
-  }, []);
-
   // Navigation context for vertical group focus (no longer provides focusedGroupIndex)
   const { moveFocusUp, moveFocusDown, MINI_PLAYER_GROUP_INDEX, isMiniPlayerVisible } =
     useFocusNavigation();
 
-  // Local focus state for each group - MUST BE DECLARED BEFORE useEffect
-  const [actionsFocusedIndex, setActionsFocusedIndex] = useState(0);
-  const [filtersFocusedIndex, setFiltersFocusedIndex] = useState(0);
-  const [relatedFocusedIndex, setRelatedFocusedIndex] = useState(0);
+  // Local focus state for each group using per-channel memory
+  const [actionsFocusedIndex, setActionsFocusedIndex] = useState(memory.actionsFocusedIndex ?? 0);
+  const [filtersFocusedIndex, setFiltersFocusedIndex] = useState(memory.filtersFocusedIndex ?? 0);
+  const [relatedFocusedIndex, setRelatedFocusedIndex] = useState(memory.relatedFocusedIndex ?? 0);
 
-  // LEARNING: Wrapper functions for navigation that provide screen state
+  // LEARNING: Wrapper functions for navigation that provide screen state (following Home.jsx pattern)
   const handleMoveFocusUp = () => {
-    const originalIndex = focusedGroupIndex;
-    let newIndex = Math.max(focusedGroupIndex - 1, 0);
-
-    // Skip FILTERS_GROUP if no filter tags exist
-    if (newIndex === FILTERS_GROUP && filterTags.length === 0) {
-      console.log('🔄 [DEBUG] Skipping FILTERS_GROUP (no tags), moving up again');
-      newIndex = Math.max(newIndex - 1, 0);
-    }
-
-    console.log('🔄 [DEBUG] MoveFocusUp:', {
-      from: originalIndex,
-      to: newIndex,
-      filterTagsLength: filterTags.length,
-      groupNames: { 0: 'ACTIONS', 1: 'FILTERS', 2: 'RELATED' },
-    });
-    setFocusedGroupIndex(newIndex);
+    moveFocusUp(focusedGroupIndex, setFocusedGroupIndex);
   };
 
   const handleMoveFocusDown = () => {
-    const originalIndex = focusedGroupIndex;
-    const maxIndex = 2; // RELATED_GROUP is the last regular group
-    let newIndex = Math.min(focusedGroupIndex + 1, maxIndex);
-
-    // Skip FILTERS_GROUP if no filter tags exist
-    if (newIndex === FILTERS_GROUP && filterTags.length === 0) {
-      console.log('🔄 [DEBUG] Skipping FILTERS_GROUP (no tags), moving down again');
-      newIndex = Math.min(newIndex + 1, maxIndex);
-    }
-
-    console.log('🔄 [DEBUG] MoveFocusDown:', {
-      from: originalIndex,
-      to: newIndex,
-      filterTagsLength: filterTags.length,
-      groupNames: { 0: 'ACTIONS', 1: 'FILTERS', 2: 'RELATED' },
-    });
-    setFocusedGroupIndex(newIndex);
+    moveFocusDown(focusedGroupIndex, setFocusedGroupIndex);
   };
 
   // REMOVED: Redundant focus initialization effect
   // Home.jsx and SearchBrowse.jsx prove that getFocusedGroupIndex(defaultGroup)
   // handles initialization correctly without needing a useEffect
 
-  // Sync DOM focus with app focus for all groups
+  // Sync DOM focus with app focus for all groups (following Home.jsx pattern)
   useEffect(() => {
-    console.log('🎯 [DEBUG] Focus sync triggered:', {
-      focusedGroupIndex,
-      groupName: { 0: 'ACTIONS', 1: 'FILTERS', 2: 'RELATED' }[focusedGroupIndex] || 'UNKNOWN',
-      actionsFocusedIndex,
-      filtersFocusedIndex,
-      relatedFocusedIndex,
-      filterTagsLength: filterTags.length,
-      timestamp: Date.now(),
-    });
-
     if (focusedGroupIndex === ACTIONS_GROUP) {
-      console.log('🎯 [DEBUG] Focusing action button:', actionsFocusedIndex);
       actionRefs.current[actionsFocusedIndex]?.focus();
     } else if (focusedGroupIndex === FILTERS_GROUP) {
-      // CRITICAL FIX: Only try to focus if filter buttons actually exist
+      // Only try to focus if filter buttons actually exist
       if (filterTags.length > 0 && filterRefs.current[filtersFocusedIndex]) {
-        console.log('🎯 [DEBUG] Focusing filter button:', filtersFocusedIndex);
         filterRefs.current[filtersFocusedIndex]?.focus();
-      } else {
-        // If no filter buttons exist, skip to next group
-        console.warn('🚨 [DEBUG] No filter buttons available, skipping FILTERS_GROUP focus');
-        return;
       }
     } else if (focusedGroupIndex === RELATED_GROUP) {
-      console.log('🎯 [DEBUG] Focusing related channel:', relatedFocusedIndex);
-      relatedCardRefs[relatedFocusedIndex]?.current?.focus();
+      // Focus the specific related channel card (following Home.jsx pattern)
+      relatedCardRefs.current[relatedFocusedIndex]?.focus();
     } else if (focusedGroupIndex === MINI_PLAYER_GROUP_INDEX && isMiniPlayerVisible) {
-      console.log('🎯 [DEBUG] Focusing mini-player, blurring related channels');
-      relatedCardRefs.forEach(ref => ref.current?.blur());
+      // Mini-player manages its own focus internally, just ensure other elements are blurred
+      actionRefs.current.forEach(ref => ref?.blur());
+      filterRefs.current.forEach(ref => ref?.blur());
+      // Also blur the currently focused related channel card
+      relatedCardRefs.current[relatedFocusedIndex]?.blur();
     }
   }, [
     focusedGroupIndex,
     actionsFocusedIndex,
     filtersFocusedIndex,
     relatedFocusedIndex,
-    filterTags.length, // Add this dependency to react to filterTags changes
+    filterTags.length,
     MINI_PLAYER_GROUP_INDEX,
     isMiniPlayerVisible,
   ]);
 
-  // Handle scroll when navigating to related channels
+  // Blur action buttons when leaving actions group (following Home.jsx pattern)
   useEffect(() => {
-    if (focusedGroupIndex === RELATED_GROUP && relatedGroupRef.current && contentRef.current) {
-      // Calculate scroll position to ensure related channels are properly visible
-      const relatedGroupRect = relatedGroupRef.current.getBoundingClientRect();
-      const contentRect = contentRef.current.getBoundingClientRect();
-
-      // Convert 3 rems to pixels (assuming 1rem = 16px)
-      const remInPixels = 16;
-      const clearanceNeeded = 3 * remInPixels;
-
-      // Mini-player is positioned at bottom of screen (1080px - mini-player height)
-      // Assuming mini-player height is around 120px, so top is at ~960px
-      const miniPlayerTop = 960;
-
-      // Calculate the bottom of the related channels (including channel card labels)
-      // Channel cards are ~200px tall, labels add ~40px, so total height ~240px
-      const relatedChannelsBottom = relatedGroupRect.bottom;
-
-      // Calculate required scroll to maintain clearance
-      const targetBottom = miniPlayerTop - clearanceNeeded;
-      const scrollNeeded = relatedChannelsBottom - targetBottom;
-
-      if (scrollNeeded > 0) {
-        // Smooth scroll to the calculated position
-        contentRef.current.scrollTo({
-          top: contentRef.current.scrollTop + scrollNeeded,
-          behavior: 'smooth',
-        });
-      }
+    if (focusedGroupIndex !== ACTIONS_GROUP) {
+      actionRefs.current.forEach(ref => ref?.blur());
     }
-  }, [focusedGroupIndex, RELATED_GROUP]);
+  }, [focusedGroupIndex]);
 
-  // --- Focus change handlers ---
-  // These should ONLY update within-group focus, not call setFocusedGroupIndex
-  // Following the Home.jsx pattern where onFocusChange only handles horizontal navigation
+  // Blur filter buttons when leaving filters group (following Home.jsx pattern)
+  useEffect(() => {
+    if (focusedGroupIndex !== FILTERS_GROUP) {
+      filterRefs.current.forEach(ref => ref?.blur());
+    }
+  }, [focusedGroupIndex]);
+
+  // Calculate vertical offset needed to clear overlays and show overflowing content
+  const getVerticalOffset = () => {
+    // Only reset offset when navigating UP from related channels (to actions/filters)
+    // Keep offset when navigating DOWN from related channels (to mini-player)
+    if (focusedGroupIndex < RELATED_GROUP) return 0;
+
+    const adBannerHeight =
+      parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ad-banner-height')) ||
+      150;
+    const miniPlayerHeight =
+      parseInt(
+        getComputedStyle(document.documentElement).getPropertyValue('--mini-player-height')
+      ) || 120;
+    const spacingXXL =
+      parseInt(getComputedStyle(document.documentElement).getPropertyValue('--spacing-xxl')) || 48;
+
+    // Calculate content overflow beyond viewport
+    const contentHeight = contentRef.current?.scrollHeight || 0;
+    const viewportHeight = window.innerHeight; // 1080px
+    const contentOverflow = Math.max(0, contentHeight - viewportHeight);
+
+    // Total offset = overlay clearance + content overflow
+    // Mini-player is visible when overlay is closed (!isPlayerOpen)
+    const overlayHeight = adBannerHeight + (!isPlayerOpen ? miniPlayerHeight : 0);
+    return overlayHeight + spacingXXL + contentOverflow;
+  };
+
+  const verticalOffset = getVerticalOffset();
+
+  // Debug logging for transform offset
+  useEffect(() => {
+    if (focusedGroupIndex >= RELATED_GROUP && contentRef.current) {
+      const contentHeight = contentRef.current.scrollHeight;
+      const viewportHeight = window.innerHeight;
+      const contentOverflow = Math.max(0, contentHeight - viewportHeight);
+
+      console.log('🔄 [DEBUG] Vertical offset calculation:', {
+        focusedGroup: focusedGroupIndex === RELATED_GROUP ? 'RELATED' : 'MINI_PLAYER',
+        contentHeight,
+        viewportHeight,
+        contentOverflow,
+        isPlayerOpen,
+        isMiniPlayerVisible: !isPlayerOpen,
+        adBannerHeight:
+          parseInt(
+            getComputedStyle(document.documentElement).getPropertyValue('--ad-banner-height')
+          ) || 150,
+        miniPlayerHeight: !isPlayerOpen
+          ? parseInt(
+              getComputedStyle(document.documentElement).getPropertyValue('--mini-player-height')
+            ) || 120
+          : 0,
+        spacingXXL:
+          parseInt(getComputedStyle(document.documentElement).getPropertyValue('--spacing-xxl')) ||
+          48,
+        totalVerticalOffset: verticalOffset,
+      });
+    } else {
+      console.log('🔄 [DEBUG] Vertical offset reset:', {
+        focusedGroup:
+          focusedGroupIndex === 0 ? 'ACTIONS' : focusedGroupIndex === 1 ? 'FILTERS' : 'OTHER',
+        verticalOffset: 0,
+      });
+    }
+  }, [verticalOffset, focusedGroupIndex, isPlayerOpen]);
+
+  // --- Focus change handlers with per-channel memory ---
   const handleActionFocusChange = index => {
-    console.log('🔀 [DEBUG] handleActionFocusChange called:', {
-      index,
-      currentFocusedGroup: focusedGroupIndex,
-    });
     setActionsFocusedIndex(index);
-    // DON'T call setFocusedGroupIndex here - that's for up/down navigation only
+    setField('actionsFocusedIndex', index); // Per-channel storage
+    setFocusedGroupIndex(ACTIONS_GROUP);
   };
 
   const handleFilterFocusChange = index => {
-    console.log('🔀 [DEBUG] handleFilterFocusChange called:', {
-      index,
-      currentFocusedGroup: focusedGroupIndex,
-    });
     setFiltersFocusedIndex(index);
-    // DON'T call setFocusedGroupIndex here - that's for up/down navigation only
+    setField('filtersFocusedIndex', index); // Per-channel storage
+    setFocusedGroupIndex(FILTERS_GROUP);
   };
 
   const handleRelatedFocusChange = index => {
-    console.log('🔀 [DEBUG] handleRelatedFocusChange called:', {
-      index,
-      currentFocusedGroup: focusedGroupIndex,
-    });
     setRelatedFocusedIndex(index);
-    // DON'T call setFocusedGroupIndex here - that's for up/down navigation only
+    setField('relatedFocusedIndex', index); // Per-channel storage
+    setFocusedGroupIndex(RELATED_GROUP);
   };
 
   const handleChannelSelect = selectedChannel => {
@@ -299,7 +246,8 @@ function ChannelInfo() {
           flexDirection: 'column',
           gap: 15,
           position: 'relative',
-          overflowY: 'auto',
+          transform: `translateY(-${verticalOffset}px)`,
+          transition: 'transform 0.3s ease-out',
         }}
       >
         {/* 
@@ -448,24 +396,13 @@ function ChannelInfo() {
                   }}
                   focused={isFocused}
                   onFocus={e => {
-                    console.log('🎯 [DEBUG] Action button focused, setting group to ACTIONS', {
-                      target: e.target,
-                      targetClasses: e.target.className,
-                      buttonIndex: i,
-                      isFocused,
-                    });
                     setFocusedGroupIndex(ACTIONS_GROUP);
                   }}
                   onKeyDown={e => {
-                    console.log('⌨️ [DEBUG] Action button keydown:', e.key);
                     if (e.key === 'ArrowDown') {
-                      console.log(
-                        '⌨️ [DEBUG] Action button ArrowDown - calling handleMoveFocusDown'
-                      );
                       handleMoveFocusDown();
                       e.preventDefault();
                     } else if (e.key === 'ArrowUp') {
-                      console.log('⌨️ [DEBUG] Action button ArrowUp - calling handleMoveFocusUp');
                       handleMoveFocusUp();
                       e.preventDefault();
                     }
@@ -510,19 +447,13 @@ function ChannelInfo() {
                     variant="secondary"
                     focused={isFocused}
                     onFocus={() => {
-                      console.log('🎯 [DEBUG] Filter button focused, setting group to FILTERS');
                       setFocusedGroupIndex(FILTERS_GROUP);
                     }}
                     onKeyDown={e => {
-                      console.log('⌨️ [DEBUG] Filter button keydown:', e.key);
                       if (e.key === 'ArrowDown') {
-                        console.log(
-                          '⌨️ [DEBUG] Filter button ArrowDown - calling handleMoveFocusDown'
-                        );
                         handleMoveFocusDown();
                         e.preventDefault();
                       } else if (e.key === 'ArrowUp') {
-                        console.log('⌨️ [DEBUG] Filter button ArrowUp - calling handleMoveFocusUp');
                         handleMoveFocusUp();
                         e.preventDefault();
                       }
@@ -562,15 +493,22 @@ function ChannelInfo() {
           >
             Related
           </div>
-          <ChannelRow ref={relatedGroupRef}>
+          <ChannelRow
+            ref={relatedGroupRef}
+            focused={focusedGroupIndex === RELATED_GROUP}
+            focusedIndex={relatedFocusedIndex}
+            onFocusChange={handleRelatedFocusChange}
+            onSelect={index => handleChannelSelect(relatedChannels[index])}
+          >
             {relatedChannels.length > 0 ? (
               relatedChannels.map((relatedChannel, index) => (
                 <KeyboardWrapper
                   key={relatedChannel.id}
-                  ref={relatedCardRefs[index]}
-                  data-stable-id={`channelinfo-related-card-${index + 1}`}
                   onSelect={() => handleChannelSelect(relatedChannel)}
                   selectData={relatedChannel}
+                  ref={el => {
+                    relatedCardRefs.current[index] = el;
+                  }}
                   onUp={handleMoveFocusUp}
                   onDown={handleMoveFocusDown}
                 >
@@ -578,10 +516,6 @@ function ChannelInfo() {
                     title={relatedChannel.title}
                     thumbnailUrl={relatedChannel.thumbnailUrl}
                     focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === index}
-                    onFocus={() => {
-                      setFocusedGroupIndex(RELATED_GROUP);
-                      handleRelatedFocusChange(index);
-                    }}
                     onClick={() => handleChannelSelect(relatedChannel)}
                   />
                 </KeyboardWrapper>

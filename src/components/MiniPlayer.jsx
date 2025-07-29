@@ -13,16 +13,21 @@ const MiniPlayer = () => {
   const location = useLocation();
 
   // LEARNING: Determine current screen from pathname for screen-specific focus state
-  const getCurrentScreen = () => {
+  // Must match the exact screen memory pattern used by each screen
+  const getScreenMemoryKey = () => {
     const path = location.pathname;
-    if (path.startsWith('/channel-info')) return 'channel-info';
+    if (path.startsWith('/channel-info/')) {
+      // Extract channelId from path to match ChannelInfo.jsx pattern
+      const channelId = path.split('/channel-info/')[1]?.split('/')[0];
+      return channelId ? `channel-info-${channelId}` : 'channel-info';
+    }
     if (path.startsWith('/search-browse')) return 'search-browse';
     return 'home'; // default
   };
 
-  // Get current screen's focus state
-  const currentScreen = getCurrentScreen();
-  const { getFocusedGroupIndex, setFocusedGroupIndex } = useScreenMemory(currentScreen);
+  // Get current screen's focus state using the correct memory key
+  const screenMemoryKey = getScreenMemoryKey();
+  const { getFocusedGroupIndex, setFocusedGroupIndex } = useScreenMemory(screenMemoryKey);
   const focusedGroupIndex = getFocusedGroupIndex();
 
   // LEARNING: MiniPlayer is focused when the current screen's focusedGroupIndex matches MINI_PLAYER_GROUP_INDEX
@@ -59,19 +64,17 @@ const MiniPlayer = () => {
   }
 
   const handleSelect = () => {
-    console.log('Mini-player handleSelect called');
     openPlayer();
   };
 
   const handleUp = e => {
-    console.log('Mini-player handleUp called');
     handleMoveFocusUp();
     e.preventDefault();
   };
 
   const handleDown = e => {
-    console.log('Mini-player handleDown called');
-    handleMoveFocusDown();
+    // Mini-player is the last group - down navigation should do nothing
+    // (Don't call handleMoveFocusDown as it would have no effect anyway)
     e.preventDefault();
   };
 
