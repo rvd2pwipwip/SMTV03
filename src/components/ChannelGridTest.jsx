@@ -26,6 +26,9 @@ const ChannelGridTest = () => {
   // Force re-render counter for debugging
   const [forceRender, setForceRender] = useState(0);
 
+  // Show/hide overlay panels
+  const [showPanels, setShowPanels] = useState(true);
+
   // Add resize observer to track width changes for debug panel
   useEffect(() => {
     if (!gridRef.current) return;
@@ -111,6 +114,20 @@ const ChannelGridTest = () => {
           >
             Force Re-render ({forceRender})
           </button>
+          <button
+            onClick={() => setShowPanels(prev => !prev)}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: showPanels ? '#4CAF50' : '#666',
+              color: '#fff',
+              border: '1px solid #555',
+              borderRadius: '4px',
+              marginLeft: '20px',
+              cursor: 'pointer',
+            }}
+          >
+            {showPanels ? '🔍 Hide Panels' : '🔍 Show Panels'}
+          </button>
         </div>
       </div>
 
@@ -144,148 +161,156 @@ const ChannelGridTest = () => {
       </div>
 
       {/* Debug Panel - Fixed Overlay */}
-      <div
-        style={{
-          position: 'fixed',
-          top: '20px',
-          right: '20px',
-          backgroundColor: 'rgba(0, 0, 0, 0.1)',
-          border: '2px solid #333',
-          borderRadius: '8px',
-          padding: '16px',
-          color: '#fff',
-          fontSize: '14px',
-          minWidth: '300px',
-          maxWidth: '400px',
-          zIndex: 1000,
-          fontFamily: 'monospace',
-        }}
-      >
-        <div style={{ marginBottom: '12px', fontWeight: 'bold', color: '#4CAF50' }}>
-          ChannelGrid Debug Panel
-        </div>
-
-        <div style={{ marginBottom: '12px' }}>
-          <div style={{ color: '#999', fontSize: '12px', marginBottom: '8px' }}>Grid Layout:</div>
-          <div>Container: 100% width</div>
-          <div>
-            Actual width:{' '}
-            <span style={{ color: '#4CAF50' }}>{containerWidth || 'Measuring...'}px</span>
-          </div>
-          <div>
-            Cards per row:{' '}
-            <span style={{ color: '#2196F3' }}>
-              {containerWidth ? Math.floor((containerWidth + 32) / (300 + 32)) : 'Calculating...'}
-            </span>
-          </div>
-          <div>
-            Total rows:{' '}
-            <span style={{ color: '#FF9800' }}>
-              {containerWidth
-                ? Math.ceil(testCardCount / Math.floor((containerWidth + 32) / (300 + 32)))
-                : 'Calculating...'}
-            </span>
-          </div>
-          <div style={{ marginTop: '8px', fontSize: '12px', color: '#999' }}>
-            Last update: {new Date().toLocaleTimeString()}
-          </div>
-        </div>
-
-        <div style={{ marginBottom: '12px' }}>
-          <div style={{ color: '#999', fontSize: '12px', marginBottom: '8px' }}>Test Settings:</div>
-          <div>
-            Card count: <span style={{ color: '#E91E63' }}>{testCardCount}</span>
-          </div>
-          <div>
-            Focus mode:{' '}
-            <span style={{ color: focused ? '#4CAF50' : '#666' }}>{focused ? 'ON' : 'OFF'}</span>
-          </div>
-        </div>
-
+      {showPanels && (
         <div
           style={{
-            fontSize: '11px',
-            color: '#666',
-            borderTop: '1px solid #333',
-            paddingTop: '8px',
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            backgroundColor: 'rgba(0, 0, 0, 0.1)',
+            border: '2px solid #333',
+            borderRadius: '8px',
+            padding: '16px',
+            color: '#fff',
+            fontSize: '14px',
+            minWidth: '300px',
+            maxWidth: '400px',
+            zIndex: 1000,
+            fontFamily: 'monospace',
           }}
         >
-          ✅ Resize browser to test responsiveness
-          <br />✅ Use controls above to test different scenarios
+          <div style={{ marginBottom: '12px', fontWeight: 'bold', color: '#4CAF50' }}>
+            ChannelGrid Debug Panel
+          </div>
+
+          <div style={{ marginBottom: '12px' }}>
+            <div style={{ color: '#999', fontSize: '12px', marginBottom: '8px' }}>Grid Layout:</div>
+            <div>Container: 100% width</div>
+            <div>
+              Actual width:{' '}
+              <span style={{ color: '#4CAF50' }}>{containerWidth || 'Measuring...'}px</span>
+            </div>
+            <div>
+              Cards per row:{' '}
+              <span style={{ color: '#2196F3' }}>
+                {containerWidth ? Math.floor((containerWidth + 32) / (300 + 32)) : 'Calculating...'}
+              </span>
+            </div>
+            <div>
+              Total rows:{' '}
+              <span style={{ color: '#FF9800' }}>
+                {containerWidth
+                  ? Math.ceil(testCardCount / Math.floor((containerWidth + 32) / (300 + 32)))
+                  : 'Calculating...'}
+              </span>
+            </div>
+            <div style={{ marginTop: '8px', fontSize: '12px', color: '#999' }}>
+              Last update: {new Date().toLocaleTimeString()}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '12px' }}>
+            <div style={{ color: '#999', fontSize: '12px', marginBottom: '8px' }}>
+              Test Settings:
+            </div>
+            <div>
+              Card count: <span style={{ color: '#E91E63' }}>{testCardCount}</span>
+            </div>
+            <div>
+              Focus mode:{' '}
+              <span style={{ color: focused ? '#4CAF50' : '#666' }}>{focused ? 'ON' : 'OFF'}</span>
+            </div>
+          </div>
+
+          <div
+            style={{
+              fontSize: '11px',
+              color: '#666',
+              borderTop: '1px solid #333',
+              paddingTop: '8px',
+            }}
+          >
+            ✅ Resize browser to test responsiveness
+            <br />✅ Use controls above to test different scenarios
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Test Details Panel - Fixed Overlay (Left Side) */}
-      <div
-        style={{
-          position: 'fixed',
-          top: '20px',
-          left: '20px',
-          backgroundColor: 'rgba(0, 0, 0, 0.1)',
-          border: '2px solid #333',
-          borderRadius: '8px',
-          padding: '16px',
-          color: '#fff',
-          fontSize: '14px',
-          minWidth: '320px',
-          maxWidth: '400px',
-          zIndex: 1000,
-          fontFamily: 'monospace',
-        }}
-      >
-        <div style={{ marginBottom: '12px', fontWeight: 'bold', color: '#2196F3' }}>
-          Phase 1 Implementation Status
-        </div>
-
-        <div style={{ marginBottom: '12px' }}>
-          <div style={{ color: '#999', fontSize: '12px', marginBottom: '8px' }}>Core Features:</div>
-          <div style={{ marginBottom: '4px' }}>
-            <span style={{ color: '#4CAF50' }}>✅</span> Responsive grid calculation
-          </div>
-          <div style={{ marginBottom: '4px' }}>
-            <span style={{ color: '#4CAF50' }}>✅</span> Partial row handling (left-aligned)
-          </div>
-          <div style={{ marginBottom: '4px' }}>
-            <span style={{ color: '#4CAF50' }}>✅</span> 300px card width consistency
-          </div>
-          <div style={{ marginBottom: '4px' }}>
-            <span style={{ color: '#4CAF50' }}>✅</span> Dynamic gap calculation
-          </div>
-          <div style={{ marginBottom: '4px' }}>
-            <span style={{ color: '#4CAF50' }}>✅</span> ResizeObserver integration
-          </div>
-        </div>
-
-        <div style={{ marginBottom: '12px' }}>
-          <div style={{ color: '#999', fontSize: '12px', marginBottom: '8px' }}>
-            Ready for Phase 2:
-          </div>
-          <div style={{ marginBottom: '4px' }}>
-            <span style={{ color: '#FF9800' }}>🔄</span> 2D navigation (Up/Down/Left/Right)
-          </div>
-          <div style={{ marginBottom: '4px' }}>
-            <span style={{ color: '#FF9800' }}>🔄</span> Focus position tracking {'{row, col}'}
-          </div>
-          <div style={{ marginBottom: '4px' }}>
-            <span style={{ color: '#FF9800' }}>🔄</span> Boundary escape callbacks
-          </div>
-        </div>
-
+      {showPanels && (
         <div
           style={{
-            fontSize: '11px',
-            color: '#666',
-            borderTop: '1px solid #333',
-            paddingTop: '8px',
+            position: 'fixed',
+            top: '20px',
+            left: '20px',
+            backgroundColor: 'rgba(0, 0, 0, 0.1)',
+            border: '2px solid #333',
+            borderRadius: '8px',
+            padding: '16px',
+            color: '#fff',
+            fontSize: '14px',
+            minWidth: '320px',
+            maxWidth: '400px',
+            zIndex: 1000,
+            fontFamily: 'monospace',
           }}
         >
-          🎯 Grid foundation complete
-          <br />
-          📐 Based on ChannelRow patterns
-          <br />
-          📱 Ready for TV navigation
+          <div style={{ marginBottom: '12px', fontWeight: 'bold', color: '#2196F3' }}>
+            Phase 1 Implementation Status
+          </div>
+
+          <div style={{ marginBottom: '12px' }}>
+            <div style={{ color: '#999', fontSize: '12px', marginBottom: '8px' }}>
+              Core Features:
+            </div>
+            <div style={{ marginBottom: '4px' }}>
+              <span style={{ color: '#4CAF50' }}>✅</span> Responsive grid calculation
+            </div>
+            <div style={{ marginBottom: '4px' }}>
+              <span style={{ color: '#4CAF50' }}>✅</span> Partial row handling (left-aligned)
+            </div>
+            <div style={{ marginBottom: '4px' }}>
+              <span style={{ color: '#4CAF50' }}>✅</span> 300px card width consistency
+            </div>
+            <div style={{ marginBottom: '4px' }}>
+              <span style={{ color: '#4CAF50' }}>✅</span> Dynamic gap calculation
+            </div>
+            <div style={{ marginBottom: '4px' }}>
+              <span style={{ color: '#4CAF50' }}>✅</span> ResizeObserver integration
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '12px' }}>
+            <div style={{ color: '#999', fontSize: '12px', marginBottom: '8px' }}>
+              Ready for Phase 2:
+            </div>
+            <div style={{ marginBottom: '4px' }}>
+              <span style={{ color: '#FF9800' }}>🔄</span> 2D navigation (Up/Down/Left/Right)
+            </div>
+            <div style={{ marginBottom: '4px' }}>
+              <span style={{ color: '#FF9800' }}>🔄</span> Focus position tracking {'{row, col}'}
+            </div>
+            <div style={{ marginBottom: '4px' }}>
+              <span style={{ color: '#FF9800' }}>🔄</span> Boundary escape callbacks
+            </div>
+          </div>
+
+          <div
+            style={{
+              fontSize: '11px',
+              color: '#666',
+              borderTop: '1px solid #333',
+              paddingTop: '8px',
+            }}
+          >
+            🎯 Grid foundation complete
+            <br />
+            📐 Based on ChannelRow patterns
+            <br />
+            📱 Ready for TV navigation
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
