@@ -168,43 +168,6 @@ function ChannelInfo() {
 
   const verticalOffset = getVerticalOffset();
 
-  // Debug logging for transform offset
-  useEffect(() => {
-    if (focusedGroupIndex >= RELATED_GROUP && contentRef.current) {
-      const contentHeight = contentRef.current.scrollHeight;
-      const viewportHeight = window.innerHeight;
-      const contentOverflow = Math.max(0, contentHeight - viewportHeight);
-
-      console.log('🔄 [DEBUG] Vertical offset calculation:', {
-        focusedGroup: focusedGroupIndex === RELATED_GROUP ? 'RELATED' : 'MINI_PLAYER',
-        contentHeight,
-        viewportHeight,
-        contentOverflow,
-        isPlayerOpen,
-        isMiniPlayerVisible: !isPlayerOpen,
-        adBannerHeight:
-          parseInt(
-            getComputedStyle(document.documentElement).getPropertyValue('--ad-banner-height')
-          ) || 150,
-        miniPlayerHeight: !isPlayerOpen
-          ? parseInt(
-              getComputedStyle(document.documentElement).getPropertyValue('--mini-player-height')
-            ) || 120
-          : 0,
-        spacingXXL:
-          parseInt(getComputedStyle(document.documentElement).getPropertyValue('--spacing-xxl')) ||
-          48,
-        totalVerticalOffset: verticalOffset,
-      });
-    } else {
-      console.log('🔄 [DEBUG] Vertical offset reset:', {
-        focusedGroup:
-          focusedGroupIndex === 0 ? 'ACTIONS' : focusedGroupIndex === 1 ? 'FILTERS' : 'OTHER',
-        verticalOffset: 0,
-      });
-    }
-  }, [verticalOffset, focusedGroupIndex, isPlayerOpen]);
-
   // --- Focus change handlers with per-channel memory ---
   const handleActionFocusChange = index => {
     setActionsFocusedIndex(index);
