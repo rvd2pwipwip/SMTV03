@@ -1,5 +1,34 @@
 import React, { useMemo, useState, useEffect, forwardRef } from 'react';
 
+/**
+ * ChannelGrid - Responsive 2D grid for channel cards
+ *
+ * A responsive grid component that automatically calculates cards per row based on container width.
+ * Designed for both TV apps (fixed width) and web/mobile apps (responsive).
+ *
+ * Features:
+ * - Responsive width calculation using ResizeObserver
+ * - Partial row handling (last row left-aligned)
+ * - 2D focus navigation support (Phase 2)
+ * - Consistent with ChannelRow patterns
+ *
+ * TV App Usage (Fixed Width):
+ *   <ChannelGrid cardWidth={300} minGap={32}>
+ *     {channels.map(channel => <ChannelCard {...channel} />)}
+ *   </ChannelGrid>
+ *
+ * Web/Mobile Usage (Responsive):
+ *   Same API - automatically adapts to container width changes
+ *
+ * Props:
+ * - cardWidth: Fixed width for each card (default: 300px)
+ * - minGap: Minimum gap between cards (default: 32px)
+ * - leftPadding/rightPadding: Container padding (default: 0)
+ * - focused: Whether grid has focus for navigation
+ * - focusedPosition: Controlled focus {row, col} for Phase 2
+ * - onFocusChange: Focus change callback
+ * - onSelect: Card selection callback
+ */
 const ChannelGrid = forwardRef(
   (
     {
@@ -42,13 +71,6 @@ const ChannelGrid = forwardRef(
 
     // Calculate grid dimensions using ChannelRow logic
     const { cardsPerRow, actualGap, totalRows, gridItems } = useMemo(() => {
-      // DEBUG: Add console logging to see what's happening
-      console.log('ChannelGrid Debug:', {
-        containerWidth,
-        cardCount,
-        cardWidth,
-        minGap,
-      });
       if (cardCount === 0) {
         return { cardsPerRow: 0, actualGap: 0, totalRows: 0, gridItems: [] };
       }
@@ -108,12 +130,6 @@ const ChannelGrid = forwardRef(
         calculatedGridItems.push(childrenArray.slice(rowStart, rowEnd));
       }
 
-      console.log('ChannelGrid Calculated:', {
-        maxCardsThatCanFit,
-        finalGap,
-        calculatedTotalRows,
-      });
-
       return {
         cardsPerRow: maxCardsThatCanFit,
         actualGap: finalGap,
@@ -133,17 +149,35 @@ const ChannelGrid = forwardRef(
       return { row: clampedRow, col: clampedCol };
     }, [focusedPosition, totalRows, gridItems]);
 
-    // Use the forwarded ref for measurements (same pattern as ChannelRow)
+    // Use the forwarded ref for measurements with resize observer (better than ChannelRow pattern)
     useEffect(() => {
-      if (forwardedRef?.current) {
-        const element = forwardedRef.current;
-        const width = element.offsetWidth;
+      if (!forwardedRef?.current) return;
 
+      const element = forwardedRef.current;
+
+      // Initial measurement
+      const updateWidth = () => {
+        const width = element.offsetWidth;
         if (width > 0) {
-          setContainerWidth(width);
+          setContainerWidth(prevWidth => (prevWidth !== width ? width : prevWidth));
         }
-      }
-    }); // No dependency array - run on every render
+      };
+
+      updateWidth();
+
+      // Add resize observer for responsive updates
+      const resizeObserver = new ResizeObserver(updateWidth);
+      resizeObserver.observe(element);
+
+      // Also add window resize listener as backup
+      window.addEventListener('resize', updateWidth);
+
+      // Cleanup
+      return () => {
+        resizeObserver.disconnect();
+        window.removeEventListener('resize', updateWidth);
+      };
+    }, []); // Only run once, ResizeObserver handles updates
 
     // Reset uncontrolled focusedPosition when focus changes or children change
     useEffect(() => {
