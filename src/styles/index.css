@@ -6,7 +6,8 @@
   padding: 0;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -40,7 +41,9 @@ body {
 /* Ensure text remains readable on smaller screens */
 @media (max-width: var(--tv-width)), (max-height: var(--tv-height)) {
   html {
-    font-size: calc(var(--tv-base-font-size) * min(calc(100vw / var(--tv-width)), calc(100vh / var(--tv-height))));
+    font-size: calc(
+      var(--tv-base-font-size) * min(calc(100vw / var(--tv-width)), calc(100vh / var(--tv-height)))
+    );
   }
 }
 
