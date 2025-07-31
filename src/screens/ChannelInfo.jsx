@@ -479,6 +479,11 @@ function ChannelInfo() {
                     title={relatedChannel.title}
                     thumbnailUrl={relatedChannel.thumbnailUrl}
                     focused={focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === index}
+                    data-focused={
+                      focusedGroupIndex === RELATED_GROUP && relatedFocusedIndex === index
+                        ? 'true'
+                        : 'false'
+                    } // Use library's built-in focus ring
                     onClick={() => handleChannelSelect(relatedChannel)}
                   />
                 </KeyboardWrapper>

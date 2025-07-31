@@ -345,6 +345,7 @@ function SearchBrowse() {
                     title={item.title || item.name || 'Unknown'}
                     thumbnailUrl={item.thumbnailUrl}
                     focused={focused}
+                    data-focused={focused ? 'true' : 'false'} // Use library's built-in focus ring
                     onClick={() => handleChannelSelect(item)}
                   />
                 ) : (

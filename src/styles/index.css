@@ -64,8 +64,7 @@ body {
   line-height: 1.5;
 }
 
-/* .tv-focus-ring {
-  outline: 4px solid #00baff !important;
-  outline-offset: 2px !important;
-  transform: scale(1.08) !important;
-} */
+/* Define missing CSS variable that ChannelCard expects */
+:root {
+  --focus-outline-offset: 0px;
+}

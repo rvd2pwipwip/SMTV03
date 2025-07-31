@@ -321,6 +321,7 @@ function Home() {
                 title={channel.title}
                 thumbnailUrl={channel.thumbnailUrl}
                 focused={focused}
+                data-focused={focused ? 'true' : 'false'} // Use library's built-in focus ring
                 onClick={() => handleChannelSelect(channel)}
               />
             </KeyboardWrapper>

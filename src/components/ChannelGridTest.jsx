@@ -259,6 +259,7 @@ const ChannelGridTest = () => {
                 title={channel.title}
                 thumbnailUrl={channel.thumbnailUrl}
                 focused={itemFocused}
+                data-focused={itemFocused ? 'true' : 'false'} // Use library's built-in focus ring
                 tabIndex={-1} // Prevent browser focus conflicts
                 onFocus={e => e.target.blur()} // Immediately blur browser focus
               />
