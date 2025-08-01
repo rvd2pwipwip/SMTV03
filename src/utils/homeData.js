@@ -4,6 +4,7 @@
 import { getChannelsByCategory } from '../data/stingrayChannelsIndex';
 import { fakeChannels } from '../data/fakeChannels';
 import { genreFilters } from '../data/genreFilters';
+import { tvLineupGenres } from '../data/tvLineupGenres';
 
 /**
  * Get items (channels or categories) for a specific home filter, limited to maxItems
@@ -25,8 +26,8 @@ export const getChannelsForHomeFilter = (filterId, maxItems = 12) => {
       items = getChannelsByCategory('recommendations');
       break;
     case 'tvLineup':
-      // TV Lineup shows genre subcategories instead of channels
-      items = genreFilters;
+      // TV Lineup shows music genre categories instead of channels
+      items = tvLineupGenres;
       break;
     default:
       items = [];
@@ -57,7 +58,7 @@ export const hasMoreChannels = (filterId, maxItems = 12) => {
       totalItems = getChannelsByCategory('recommendations').length;
       break;
     case 'tvLineup':
-      totalItems = genreFilters.length;
+      totalItems = tvLineupGenres.length;
       break;
     default:
       totalItems = 0;
@@ -80,7 +81,7 @@ export const getTotalChannelCount = filterId => {
     case 'recommendations':
       return getChannelsByCategory('recommendations').length;
     case 'tvLineup':
-      return genreFilters.length;
+      return tvLineupGenres.length;
     default:
       return 0;
   }

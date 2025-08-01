@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { ChannelCard, Button } from '@smtv/tv-component-library';
+import { ChannelCard, Button, CategoryCard } from '@smtv/tv-component-library';
 import '@smtv/tv-component-library/dist/style.css';
 import '../styles/App.css';
 import AdBanner from '../components/AdBanner';
@@ -9,7 +9,7 @@ import { TRANS_BTN_ICON_SIZE } from '../constants/ui';
 import FixedSwimlane from '../components/FixedSwimlane';
 import { fakeChannels } from '../data/fakeChannels';
 import KeyboardWrapper from '../components/KeyboardWrapper';
-import { getChannelsForHomeFilter, hasMoreChannels } from '../utils/homeData';
+import { getChannelsForHomeFilter, hasMoreChannels, getFilterDataType } from '../utils/homeData';
 import VariableSwimlane from '../components/VariableSwimlane';
 import { tvHomeFilters } from '../data/tvHomeFilters';
 import { genreFilters } from '../data/genreFilters'; // for testing VariableSwimlane
@@ -25,9 +25,10 @@ function Home() {
   // const activeFilterId = memory.activeFilterId || genreFilters[0]?.id;
   const setActiveFilterId = id => setField('activeFilterId', id);
 
-  // Get channels for the current filter (limit to 12 to leave room for "More" tile)
-  const currentChannels = getChannelsForHomeFilter(activeFilterId, 12);
+  // Get items for the current filter (channels or categories)
+  const currentItems = getChannelsForHomeFilter(activeFilterId, 12);
   const showMoreTile = hasMoreChannels(activeFilterId, 12);
+  const isShowingCategories = getFilterDataType(activeFilterId) === 'categories';
 
   // Refs for each group
   const searchRef = useRef(null);
@@ -93,6 +94,13 @@ function Home() {
   const handleChannelSelect = channel => {
     navigate(`/channel-info/${channel.id}`, {
       state: { fromHome: true },
+    });
+  };
+
+  const handleCategorySelect = category => {
+    // Navigate to genre grid view (MoreGridView)
+    navigate(`/genre/${category.id}`, {
+      state: { fromHome: true, genreName: category.name },
     });
   };
 
@@ -305,29 +313,40 @@ function Home() {
 
         {/* Swimlane group */}
         <FixedSwimlane
-          items={currentChannels}
-          renderItem={(channel, i, focused) => (
+          items={currentItems}
+          renderItem={(item, i, focused) => (
             <KeyboardWrapper
-              key={channel.id}
-              onSelect={() => handleChannelSelect(channel)}
-              selectData={channel}
+              key={item.id}
+              onSelect={() =>
+                isShowingCategories ? handleCategorySelect(item) : handleChannelSelect(item)
+              }
+              selectData={item}
               ref={el => {
                 cardRefs.current[i] = el;
               }}
               onUp={handleMoveFocusUp}
               onDown={handleMoveFocusDown}
             >
-              <ChannelCard
-                title={channel.title}
-                thumbnailUrl={channel.thumbnailUrl}
-                focused={focused}
-                data-focused={focused ? 'true' : 'false'} // Use library's built-in focus ring
-                onClick={() => handleChannelSelect(channel)}
-              />
+              {isShowingCategories ? (
+                <CategoryCard
+                  title={item.name || 'Unknown Category'}
+                  thumbnailUrl={item.thumbnailUrl}
+                  focused={focused}
+                  onClick={() => handleCategorySelect(item)}
+                />
+              ) : (
+                <ChannelCard
+                  title={item.title}
+                  thumbnailUrl={item.thumbnailUrl}
+                  focused={focused}
+                  data-focused={focused ? 'true' : 'false'} // Use library's built-in focus ring
+                  onClick={() => handleChannelSelect(item)}
+                />
+              )}
             </KeyboardWrapper>
           )}
           maxItems={12}
-          fallbackItem={<div>No channels available</div>}
+          fallbackItem={<div>No {isShowingCategories ? 'categories' : 'channels'} available</div>}
           focused={focusedGroupIndex === SWIMLANE_GROUP}
           focusedIndex={swimlaneFocusedIndex}
           onFocusChange={index => {

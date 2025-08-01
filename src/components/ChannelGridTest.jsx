@@ -21,7 +21,8 @@ const ChannelGridTest = () => {
   const gridRef = useRef(null);
 
   // Track container width for debug display
-  const [containerWidth, setContainerWidth] = useState(0);
+  // Fixed TV layout: 5 cards per row (matches app's 100px side padding)
+  const CARDS_PER_ROW = 5;
 
   // Force re-render counter for debugging
   const [forceRender, setForceRender] = useState(0);
@@ -39,42 +40,11 @@ const ChannelGridTest = () => {
   // Debug: Log state changes
   console.log('ChannelGridTest render:', {
     testCardCount,
-    containerWidth,
     focused,
     fakeChannelsLength: fakeChannels.length,
   });
 
-  // Add resize observer to track width changes for debug panel
-  useEffect(() => {
-    if (!gridRef.current) return;
-
-    const element = gridRef.current;
-
-    const updateWidth = () => {
-      const width = element.offsetWidth;
-      console.log('ChannelGridTest: Container width update:', width);
-      setContainerWidth(prevWidth => {
-        if (prevWidth !== width) {
-          console.log('ChannelGridTest: Width changed from', prevWidth, 'to', width);
-          return width;
-        }
-        return prevWidth;
-      });
-    };
-
-    updateWidth();
-
-    const resizeObserver = new ResizeObserver(updateWidth);
-    resizeObserver.observe(element);
-
-    // Add window resize listener as backup
-    window.addEventListener('resize', updateWidth);
-
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener('resize', updateWidth);
-    };
-  }, []);
+  // No ResizeObserver needed for fixed TV layout
 
   // Create test data with variable counts - extend fakeChannels if needed
   const extendedChannels = [];
@@ -191,8 +161,8 @@ const ChannelGridTest = () => {
           borderRadius: '8px',
           padding: '20px',
           paddingTop: '160px', // Original padding - no scaling
-          paddingLeft: '40px', // Original padding - no scaling
-          paddingRight: '40px',
+          paddingLeft: '100px', // App's standard side padding
+          paddingRight: '100px', // Total: 200px padding (matches --screen-side-padding)
           display: 'flex',
           flexDirection: 'column',
           overflow: 'visible', // Allow rows to show when moving up
@@ -268,6 +238,8 @@ const ChannelGridTest = () => {
             style={{ backgroundColor: '#111' }}
             cardWidth={300}
             minGap={32}
+            leftPadding={0} // Test uses container padding instead of component padding
+            rightPadding={0}
             key={forceRender} // Force complete re-mount for debugging
             focusedPosition={focusedPosition}
             onFocusChange={newPosition => {
@@ -325,30 +297,24 @@ const ChannelGridTest = () => {
             <div style={{ color: '#999', fontSize: '12px', marginBottom: '8px' }}>Grid Layout:</div>
             <div>Container: 100% width</div>
             <div>
-              Actual width:{' '}
-              <span style={{ color: '#4CAF50' }}>{containerWidth || 'Measuring...'}px</span>
+              Fixed TV Layout: <span style={{ color: '#4CAF50' }}>1920x1080</span>
             </div>
             <div>
-              Cards per row:{' '}
-              <span style={{ color: '#2196F3' }}>
-                {containerWidth ? Math.floor((containerWidth + 32) / (300 + 32)) : 'Calculating...'}
+              Cards per row: <span style={{ color: '#2196F3' }}>{CARDS_PER_ROW} (300px each)</span>
+            </div>
+            <div>
+              Gap spacing:{' '}
+              <span style={{ color: '#9C27B0' }}>
+                {(220 / 4).toFixed(1)}px (calculated to fit 1720px)
               </span>
             </div>
             <div>
               Total rows:{' '}
-              <span style={{ color: '#FF9800' }}>
-                {containerWidth
-                  ? Math.ceil(testCardCount / Math.floor((containerWidth + 32) / (300 + 32)))
-                  : 'Calculating...'}
-              </span>
+              <span style={{ color: '#FF9800' }}>{Math.ceil(testCardCount / CARDS_PER_ROW)}</span>
               <br />
-              Grid content:{' '}
+              Content width:{' '}
               <span style={{ color: '#4CAF50' }}>
-                {testCardCount} cards ={' '}
-                {containerWidth
-                  ? Math.ceil(testCardCount / Math.floor((containerWidth + 32) / (300 + 32)))
-                  : '?'}{' '}
-                rows
+                {(5 * 300 + 4 * (220 / 4)).toFixed(0)}px (fits in 1720px)
               </span>
             </div>
             <div style={{ marginTop: '8px', fontSize: '12px', color: '#999' }}>
@@ -448,7 +414,7 @@ const ChannelGridTest = () => {
               <span style={{ color: '#4CAF50' }}>✅</span> Dynamic gap calculation
             </div>
             <div style={{ marginBottom: '4px' }}>
-              <span style={{ color: '#4CAF50' }}>✅</span> ResizeObserver integration
+              <span style={{ color: '#4CAF50' }}>✅</span> Fixed TV layout
             </div>
           </div>
 

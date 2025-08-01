@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Home from './screens/Home';
 import ChannelInfo from './screens/ChannelInfo';
 import SearchBrowse from './screens/SearchBrowse';
+import MoreGridView from './screens/MoreGridView';
 import ChannelGridTest from './components/ChannelGridTest';
 import './styles/App.css';
 import { GroupFocusNavigationProvider } from './contexts/GroupFocusNavigationContext';
@@ -58,6 +59,7 @@ function AppContent() {
             <Route path="/" element={<Home />} />
             <Route path="/search-browse" element={<SearchBrowse />} />
             <Route path="/channel-info/:channelId" element={<ChannelInfo />} />
+            <Route path="/genre/:genreId" element={<MoreGridView />} />
             <Route path="/grid-test" element={<ChannelGridTest />} />
           </Routes>
 

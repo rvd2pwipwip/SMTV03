@@ -1,29 +1,31 @@
 import React, { useMemo, useState, useEffect, useLayoutEffect, useRef, forwardRef } from 'react';
 
 /**
- * ChannelGrid - Responsive 2D grid for channel cards
+ * ChannelGrid - Fixed 2D grid for TV channel cards
  *
- * A responsive grid component that automatically calculates cards per row based on container width.
- * Designed for both TV apps (fixed width) and web/mobile apps (responsive).
+ * A fixed grid component optimized for TV screens (1920x1080).
+ * Uses 5 cards per row with fixed 300px card width and calculated gaps.
  *
  * Features:
- * - Responsive width calculation using ResizeObserver
- * - Partial row handling (last row left-aligned)
+ * - Fixed 5-column layout optimized for TV screens
+ * - Vertical parking scroll behavior
  * - 2D focus navigation support (Phase 2)
  * - Consistent with ChannelRow patterns
  *
- * TV App Usage (Fixed Width):
- *   <ChannelGrid cardWidth={300} minGap={32}>
- *     {channels.map(channel => <ChannelCard {...channel} />)}
- *   </ChannelGrid>
- *
- * Web/Mobile Usage (Responsive):
- *   Same API - automatically adapts to container width changes
+ * TV App Usage:
+ *   <ChannelGrid
+ *     items={channels}
+ *     renderItem={(channel, index, focused) => <ChannelCard {...channel} focused={focused} />}
+ *     leftPadding={getSidePadding()}
+ *     rightPadding={getSidePadding()}
+ *   />
  *
  * Props:
+ * - items: Array of data items to render
+ * - renderItem: Function to render each item with (item, index, focused) => ReactNode
  * - cardWidth: Fixed width for each card (default: 300px)
  * - minGap: Minimum gap between cards (default: 32px)
- * - leftPadding/rightPadding: Container padding (default: 0)
+ * - leftPadding/rightPadding: Container padding (default: 0, should match getSidePadding())
  * - focused: Whether grid has focus for navigation
  * - focusedPosition: Controlled focus {row, col} for Phase 2
  * - onFocusChange: Focus change callback
@@ -57,7 +59,8 @@ const ChannelGrid = forwardRef(
     },
     forwardedRef
   ) => {
-    const [containerWidth, setContainerWidth] = useState(0);
+    // Fixed TV layout: 5 cards per row (matches app's 100px side padding)
+    const CARDS_PER_ROW = 5;
 
     // Internal state for focused position (uncontrolled mode)
     const [uncontrolledFocusedPosition, setUncontrolledFocusedPosition] = useState({
@@ -73,91 +76,56 @@ const ChannelGrid = forwardRef(
 
     const cardCount = items.length;
 
-    // Calculate grid dimensions using ChannelRow logic
+    // Fixed TV grid calculation with proper spacing to prevent clipping
     const { cardsPerRow, actualGap, totalRows, gridItems } = useMemo(() => {
-      console.log('Grid calculation debug:', { cardCount, containerWidth, cardWidth, minGap });
+      console.log('Fixed TV grid calculation:', { cardCount, CARDS_PER_ROW });
 
       if (cardCount === 0) {
         return { cardsPerRow: 0, actualGap: 0, totalRows: 0, gridItems: [] };
       }
 
-      if (cardCount === 1) {
-        return {
-          cardsPerRow: 1,
-          actualGap: 0,
-          totalRows: 1,
-          gridItems: [items],
-        };
-      }
+      // Use fixed cards per row for TV layout
+      const cardsPerRow = CARDS_PER_ROW;
 
-      // If containerWidth is 0 (initial render), use conservative fallback
-      if (containerWidth === 0) {
-        console.log('Using fallback calculation - containerWidth is 0');
-        const fallbackCardsPerRow = Math.min(cardCount, 3);
-        const fallbackRows = Math.ceil(cardCount / fallbackCardsPerRow);
-        const fallbackGridItems = [];
+      // Calculate optimal gap to fit exactly in available space
+      // Using app's standard 100px side padding (same as --screen-side-padding)
+      const availableWidth = 1920 - 200; // 1720px available for content
+      const totalCardWidth = cardsPerRow * cardWidth; // 5 × 300 = 1500px
+      const totalGapSpace = availableWidth - totalCardWidth; // 1720 - 1500 = 220px
+      const numberOfGaps = cardsPerRow - 1; // 4 gaps between 5 cards
+      const calculatedGap = totalGapSpace / numberOfGaps; // 220px ÷ 4 = 55px
 
-        for (let i = 0; i < fallbackRows; i++) {
-          const rowStart = i * fallbackCardsPerRow;
-          const rowEnd = Math.min(rowStart + fallbackCardsPerRow, cardCount);
-          fallbackGridItems.push(items.slice(rowStart, rowEnd));
-        }
-
-        console.log('Fallback result:', {
-          fallbackCardsPerRow,
-          fallbackRows,
-          gridItems: fallbackGridItems.map(row => row.length),
-        });
-
-        return {
-          cardsPerRow: fallbackCardsPerRow,
-          actualGap: minGap,
-          totalRows: fallbackRows,
-          gridItems: fallbackGridItems,
-        };
-      }
-
-      // Calculate maximum cards that can fit per row (borrowing from ChannelRow)
-      let maxCardsThatCanFit = Math.floor((containerWidth + minGap) / (cardWidth + minGap));
-      if (maxCardsThatCanFit < 1) maxCardsThatCanFit = 1;
-
-      // Calculate the actual gap using the maximum cards that can fit
-      const totalCardWidth = maxCardsThatCanFit * cardWidth;
-      const availableGapSpace = containerWidth - totalCardWidth;
-      const numberOfGaps = maxCardsThatCanFit - 1;
-
-      const calculatedGap = numberOfGaps > 0 ? availableGapSpace / numberOfGaps : 0;
-      const finalGap = Math.max(calculatedGap, minGap, 0);
+      // Use calculated gap to prevent clipping
+      const actualGap = Math.max(calculatedGap, 32); // Minimum 32px gap
 
       // Calculate total rows needed
-      const calculatedTotalRows = Math.ceil(cardCount / maxCardsThatCanFit);
+      const totalRows = Math.ceil(cardCount / cardsPerRow);
 
       // Create grid structure: array of rows, each row is array of items
-      const calculatedGridItems = [];
-
-      for (let rowIndex = 0; rowIndex < calculatedTotalRows; rowIndex++) {
-        const rowStart = rowIndex * maxCardsThatCanFit;
-        const rowEnd = Math.min(rowStart + maxCardsThatCanFit, cardCount);
-        calculatedGridItems.push(items.slice(rowStart, rowEnd));
+      const gridItems = [];
+      for (let rowIndex = 0; rowIndex < totalRows; rowIndex++) {
+        const rowStart = rowIndex * cardsPerRow;
+        const rowEnd = Math.min(rowStart + cardsPerRow, cardCount);
+        gridItems.push(items.slice(rowStart, rowEnd));
       }
 
-      console.log('Final grid calculation:', {
-        maxCardsThatCanFit,
-        finalGap,
-        calculatedTotalRows,
-        gridItems: calculatedGridItems.map(row => row.length),
-        containerWidth,
+      console.log('Fixed TV grid result:', {
+        cardsPerRow,
         cardWidth,
-        minGap,
+        actualGap,
+        totalRows,
+        availableWidth,
+        totalContentWidth: totalCardWidth + numberOfGaps * actualGap,
+        gridItems: gridItems.map(row => row.length),
       });
 
       return {
-        cardsPerRow: maxCardsThatCanFit,
-        actualGap: finalGap,
-        totalRows: calculatedTotalRows,
-        gridItems: calculatedGridItems,
+        cardsPerRow,
+        actualGap,
+        totalRows,
+        gridItems,
       };
-    }, [containerWidth, cardWidth, cardCount, minGap, items]);
+    }, [CARDS_PER_ROW, cardCount, cardWidth, items]);
 
     // Row height - will be measured from actual DOM element
     const [measuredRowHeight, setMeasuredRowHeight] = useState(0);
@@ -177,7 +145,6 @@ const ChannelGrid = forwardRef(
     // Debug: Log state changes (after all variables are declared)
     console.log('📦 ChannelGrid render:', {
       cardCount,
-      containerWidth,
       focused,
       scrollOffset,
       focusedPosition: clampedFocusedPosition,
@@ -185,42 +152,7 @@ const ChannelGrid = forwardRef(
       actualGap,
     });
 
-    // Use the forwarded ref for measurements with resize observer (better than ChannelRow pattern)
-    useEffect(() => {
-      if (!forwardedRef?.current) return;
-
-      const element = forwardedRef.current;
-
-      // Initial measurement
-      const updateWidth = () => {
-        const width = element.offsetWidth;
-        console.log('ChannelGrid: Container width update:', width);
-        if (width > 0) {
-          setContainerWidth(prevWidth => {
-            if (prevWidth !== width) {
-              console.log('ChannelGrid: Width changed from', prevWidth, 'to', width);
-              return width;
-            }
-            return prevWidth;
-          });
-        }
-      };
-
-      updateWidth();
-
-      // Add resize observer for responsive updates
-      const resizeObserver = new ResizeObserver(updateWidth);
-      resizeObserver.observe(element);
-
-      // Also add window resize listener as backup
-      window.addEventListener('resize', updateWidth);
-
-      // Cleanup
-      return () => {
-        resizeObserver.disconnect();
-        window.removeEventListener('resize', updateWidth);
-      };
-    }, []); // Only run once, ResizeObserver handles updates
+    // No ResizeObserver needed for fixed TV layout
 
     // Phase 2: 2D Navigation + Boundary Escape Pattern
     // Handle full 2D navigation within grid, escape at boundaries for group navigation
